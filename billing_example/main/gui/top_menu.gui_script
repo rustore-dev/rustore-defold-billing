@@ -1,0 +1,31 @@
+require("main.gui.top_menu_consts")
+
+local _receiver = nil
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+end
+
+
+local function _input_handler(button_name, action)
+	local button = gui.get_node(button_name)
+	if gui.pick_node(button, action.x, action.y) then
+		msg.post(_receiver, TOP_MENU_BUTTON_PRESSED, { button = button_name })
+	end
+end
+
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		_input_handler(TOP_MENU_AVAILABILITY, action)
+		_input_handler(TOP_MENU_PRODUCTS, action)
+		_input_handler(TOP_MENU_PURCHASES, action)
+	end
+end
+
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash(TOP_MENU_SET_RECEIVER_MESSAGE_ID) then
+		_receiver = message.receiver
+	end
+end

@@ -1,0 +1,3 @@
+rootProject.name = "extension_libraries"
+include ':RuStoreDefoldCore'
+include ':RuStoreDefoldBilling'

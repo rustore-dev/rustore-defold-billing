@@ -1,0 +1,40 @@
+require("main.gui.slider_consts")
+
+local _receiver = nil
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+end
+
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash(SLIDER_SET_TITLE_MESSAGE_ID) then
+		local text = gui.get_node("title_text")
+		gui.set_text(text, message.title)
+	end
+
+	if message_id == hash(SLIDER_SET_RECEIVER_MESSAGE_ID) then
+		_receiver = message.receiver
+	end
+
+	if message_id == hash(SLIDER_SET_INFO_MESSAGE_ID) then
+		local text = gui.get_node("product_text")
+		gui.set_text(text, message.info)
+	end
+end
+
+
+local function _input_handler(button_name, action)
+	local button = gui.get_node(button_name)
+	if gui.pick_node(button, action.x, action.y) then
+		msg.post(_receiver, SLIDER_BUTTON_PRESSED, { button = button_name })
+	end
+end
+
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		_input_handler(SLIDER_BUTTON_LEFT, action)
+		_input_handler(SLIDER_BUTTON_RIGHT, action)
+	end
+end

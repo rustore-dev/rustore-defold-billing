@@ -1,0 +1,64 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+}
+
+android {
+    compileSdkVersion 33
+    buildToolsVersion "30.0.3"
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 33
+        versionCode sdk_version_code
+        versionName "${rustore_core_version}"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+dependencies {
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "androidx.fragment:fragment:1.3.0"
+    //implementation "com.google.code.gson:gson:2.10.1"
+    compileOnly fileTree(dir: '../libs', include: ['*.aar', '*.jar'], exclude: [])
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+}
+
+task createJar(type: Copy) {
+    def aarFile = file( [buildDir.absolutePath, 'outputs', 'aar', "${project.name}-release.aar"].join(File.separator) )
+    def outputDir = file( ["$rustore_example_folder", 'extension_rustore_core', 'lib', 'android'].join(File.separator) )
+
+    from zipTree(aarFile)
+    include '**/*.jar'
+    into outputDir
+    rename { fileName ->
+        fileName.replace("classes.jar", "${project.name}.jar")
+    }
+}
+
+afterEvaluate {
+    assembleRelease.finalizedBy('createJar')
+}

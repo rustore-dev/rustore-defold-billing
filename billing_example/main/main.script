@@ -1,0 +1,360 @@
+require("main.gui.top_menu_consts")
+require("main.gui.slider_consts")
+require("main.gui.product_actions_consts")
+require("main.gui.purchase_actions_consts")
+
+local THIS_RECEIVER = "background#main"
+local LOG_TAG = "ssss"
+local APPLICATION_ID = "184062"
+local DEEPLINK_SCHEME = "example"
+local PRODUCT_IDS = { "ue_non_con2", "ue_non_con1", "ue_con2", "ue_con1", "ue_sub2", "ue_sub1" }
+
+local _data_collection = {}
+local _slider_collection = {}
+local _slider_position = 0
+
+local function _set_slider_page(collection, num)
+	if num > 0 and num <= #collection then
+		msg.post(SLIDER_RECEIVER, SLIDER_SET_TITLE_MESSAGE_ID, { title = tostring(num).." / "..#collection })
+		msg.post(SLIDER_RECEIVER, SLIDER_SET_INFO_MESSAGE_ID, { info = collection[num] })
+
+		return num
+	else
+		msg.post(SLIDER_RECEIVER, SLIDER_SET_TITLE_MESSAGE_ID, { title = "" })
+		msg.post(SLIDER_RECEIVER, SLIDER_SET_INFO_MESSAGE_ID, { info = "" })
+
+		return 0
+	end
+end
+
+function init(self)
+	msg.post(".", "acquire_input_focus")
+	msg.post("@render:", "use_fixed_fit_projection", { near = -1, far = 1 })
+
+	rustorecore.connect("rustore_check_purchases_available_success", _check_purchases_available_success)
+	rustorecore.connect("rustore_check_purchases_available_failure", _check_purchases_available_failure)
+	rustorecore.connect("rustore_on_get_products_success", _on_get_products_success)
+	rustorecore.connect("rustore_on_get_products_failure", _on_get_products_failure)
+	rustorecore.connect("rustore_on_purchase_product_success", _on_purchase_product_success)
+	rustorecore.connect("rustore_on_purchase_product_failure", _on_purchase_product_failure)
+	rustorecore.connect("rustore_on_get_purchases_success", _on_get_purchases_success)
+	rustorecore.connect("rustore_on_get_purchases_failure", _on_get_purchases_failure)
+	rustorecore.connect("rustore_on_confirm_purchase_success", _on_confirm_purchase_success)
+	rustorecore.connect("rustore_on_confirm_purchase_failure", _on_confirm_purchase_failure)
+	rustorecore.connect("rustore_on_delete_purchase_success", _on_delete_purchase_success)
+	rustorecore.connect("rustore_on_delete_purchase_failure", _on_delete_purchase_failure)
+	rustorecore.connect("rustore_on_get_purchase_info_success", _on_get_purchase_info_success)
+	rustorecore.connect("rustore_on_get_purchase_info_failure", _on_get_purchase_info_failure)
+	rustorebilling.init(APPLICATION_ID, DEEPLINK_SCHEME)
+	rustorebilling.set_theme(0)
+
+	-- Top menu
+	msg.post(TOP_MENU_RECEIVER, TOP_MENU_SET_RECEIVER_MESSAGE_ID, { receiver = THIS_RECEIVER })
+
+	-- Slider
+	msg.post(SLIDER_RECEIVER, SLIDER_SET_RECEIVER_MESSAGE_ID, { receiver = THIS_RECEIVER })
+	msg.post(SLIDER_RECEIVER, SLIDER_SET_TITLE_MESSAGE_ID, { title = "" })
+
+	-- Product actions
+	msg.post(PRODUCT_ACTIONS_RECEIVER, PRODUCT_ACTIONS_SET_RECEIVER_MESSAGE_ID, { receiver = THIS_RECEIVER })
+	msg.post(PRODUCT_ACTIONS_RECEIVER, PRODUCT_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+
+	-- Purchase actions
+	msg.post(PURCHASE_ACTIONS_RECEIVER, PURCHASE_ACTIONS_SET_RECEIVER_MESSAGE_ID, { receiver = THIS_RECEIVER })
+	msg.post(PURCHASE_ACTIONS_RECEIVER, PURCHASE_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+end
+
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash(TOP_MENU_BUTTON_PRESSED) then
+		if message.button == TOP_MENU_AVAILABILITY then
+			rustorebilling.check_purchases_availability()
+			rustorecore.show_toast("Begin check")
+		end
+
+		if message.button == TOP_MENU_PRODUCTS then
+			msg.post(SLIDER_RECEIVER, SLIDER_SET_TITLE_MESSAGE_ID, { title = "" })
+			msg.post(SLIDER_RECEIVER, SLIDER_SET_INFO_MESSAGE_ID, { info = "Loading..." })
+			msg.post(PRODUCT_ACTIONS_RECEIVER, PRODUCT_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+			msg.post(PURCHASE_ACTIONS_RECEIVER, PURCHASE_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+			
+			rustorebilling.get_products(PRODUCT_IDS)
+		end
+
+		if message.button == TOP_MENU_PURCHASES then
+			msg.post(SLIDER_RECEIVER, SLIDER_SET_TITLE_MESSAGE_ID, { title = "" })
+			msg.post(SLIDER_RECEIVER, SLIDER_SET_INFO_MESSAGE_ID, { info = "Loading..." })
+			msg.post(PRODUCT_ACTIONS_RECEIVER, PRODUCT_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+			msg.post(PURCHASE_ACTIONS_RECEIVER, PURCHASE_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+			
+			rustorebilling.get_purchases()
+		end
+	end
+
+	if message_id == hash(SLIDER_BUTTON_PRESSED) then
+		if message.button == SLIDER_BUTTON_LEFT then
+			local pos = _slider_position - 1
+			if pos <= 0 then pos = #_slider_collection end
+			_slider_position = _set_slider_page(_slider_collection, pos)
+		end
+
+		if message.button == SLIDER_BUTTON_RIGHT then
+			local pos = _slider_position + 1
+			if pos > #_slider_collection then pos = 1 end
+			_slider_position = _set_slider_page(_slider_collection, pos)
+		end
+	end
+	
+	if message_id == hash(PRODUCT_ACTIONS_BUTTON_PRESSED) then
+		if message.button == PRODUCT_ACTIONS_BUY_BUTTON then
+			local data = _data_collection[_slider_position] 
+			rustorebilling.purchase_product(data.productId)
+		end
+	end
+
+	if message_id == hash(PURCHASE_ACTIONS_BUTTON_PRESSED) then
+		if message.button == PURCHASE_ACTIONS_CONFIRM_BUTTON then
+			local data = _data_collection[_slider_position] 
+			rustorebilling.confirm_purchase(data.productId)
+		end
+
+		if message.button == PURCHASE_ACTIONS_DELETE_BUTTON then
+			local data = _data_collection[_slider_position] 
+			rustorebilling.delete_purchase(data.productId)
+		end
+
+		if message.button == PURCHASE_ACTIONS_INFO_BUTTON then
+			local data = _data_collection[_slider_position] 
+			rustorebilling.get_purchase_info(data.productId)
+		end
+	end
+end
+
+-- 
+-- Check purchase availability
+-- 
+function _check_purchases_available_success(self, channel, value)
+	-- json fields:
+	-- isAvailable - boolean
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+	
+	local data = json.decode(value)
+	local message = "Available: "..tostring(data.isAvailable)
+	if data.isAvailable == false then
+		message = message..", cause: "..data.detailMessage
+	end
+	
+	rustorecore.show_toast(message)
+end
+
+function _check_purchases_available_failure(self, channel, value)
+	-- json fields:
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+	
+	local data = json.decode(value)
+	rustorecore.show_toast(data.detailMessage)
+end
+
+-- 
+-- Update products list
+-- 
+function _on_get_products_success(self, channel, value)
+	-- json fields:
+	-- [] - array of products
+	-- -- currency - string
+	-- -- description - string
+	-- -- imageUrl - json {"cachedFsi":-2,"cachedSsi":-2,"scheme":"NOT CACHED","uriString":"","host":"NOT CACHED","port":-2},
+	-- -- language - string
+	-- -- price - number
+	-- -- priceLabel - string
+	-- -- productId - string
+	-- -- productStatus - string
+	-- -- productType -- string
+	-- -- promoImageUrl - json {"cachedFsi":-2,"cachedSsi":-2,"scheme":"NOT CACHED","uriString":"","host":"NOT CACHED","port":-2}
+	-- -- title - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+	
+	_data_collection = json.decode(value)
+	_slider_collection = {}
+	
+	for key, value in pairs(_data_collection) do
+		local s_info = ""
+		s_info = s_info.."Product Id: "..value.productId.."\n"
+		s_info = s_info.."Title: "..value.title.."\n"
+		s_info = s_info.."Type: "..value.productType.."\n"
+		s_info = s_info.."Status: "..value.productStatus.."\n"
+		s_info = s_info.."Price: "..value.priceLabel
+		
+		table.insert(_slider_collection, s_info)
+	end
+
+	_slider_position = _set_slider_page(_slider_collection, 1)
+
+	if #_data_collection > 0 then
+		msg.post(PRODUCT_ACTIONS_RECEIVER, PRODUCT_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = true })
+		msg.post(PURCHASE_ACTIONS_RECEIVER, PURCHASE_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+	end
+end
+
+function _on_get_products_failure(self, channel, value)
+	-- json fields:
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local data = json.decode(value)
+	_slider_position = _set_slider_page({}, 0)
+	msg.post(SLIDER_RECEIVER, SLIDER_SET_INFO_MESSAGE_ID, { info = data.detailMessage })
+end
+
+-- 
+-- Purchase product
+-- 
+function _on_purchase_product_success(self, channel, value)
+	-- json fields:
+
+	rustorecore.log_warning(LOG_TAG, value)
+	
+	local data = json.decode(value)
+end
+
+function _on_purchase_product_failure(self, channel, value)
+	-- json fields:
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local data = json.decode(value)
+	rustorecore.show_toast(data.detailMessage)
+end
+
+-- 
+-- Update purchases list
+-- 
+function _on_get_purchases_success(self, channel, value)
+	-- json fields:
+	-- [] - array of purchases
+	-- -- amount - number
+	-- -- amountLabel - string
+	-- -- currency - string
+	-- -- invoiceId - string
+	-- -- language - string
+	-- -- orderId - string
+	-- -- productId - string
+	-- -- productType - string
+	-- -- purchaseId - string
+	-- -- purchaseState - string
+	-- -- purchaseTime - string
+	-- -- quantity - number
+	-- -- subscriptionToken
+	
+	rustorecore.log_warning(LOG_TAG, value)
+	
+	_data_collection = json.decode(value)
+	_slider_collection = {}
+
+	for key, value in pairs(_data_collection) do
+		local s_info = ""
+		s_info = s_info.."Purchase Id: "..value.purchaseId.."\n"
+		s_info = s_info.."Time: "..value.purchaseTime.."\n"
+		s_info = s_info.."Type: "..value.productType.."\n"
+		s_info = s_info.."State: "..value.purchaseState.."\n"
+		s_info = s_info.."Price: "..value.amountLabel.."\n"
+		s_info = s_info.."Invoice Id: "..value.invoiceId.."\n"
+		s_info = s_info.."Order Id: "..value.orderId
+		
+		table.insert(_slider_collection, s_info)
+	end
+
+	_slider_position = _set_slider_page(_slider_collection, 1)
+
+	if #_data_collection > 0 then
+		msg.post(PRODUCT_ACTIONS_RECEIVER, PRODUCT_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+		msg.post(PURCHASE_ACTIONS_RECEIVER, PURCHASE_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = true })
+	end
+end
+
+function _on_get_purchases_failure(self, channel, value)
+	-- json fields:
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local data = json.decode(value)
+	_slider_position = _set_slider_page({}, 0)
+	msg.post(SLIDER_RECEIVER, SLIDER_SET_INFO_MESSAGE_ID, { info = data.detailMessage })
+end
+
+-- 
+-- Confirm purchase
+-- 
+function _on_confirm_purchase_success(self, channel, value)
+	-- json fields:
+	-- purchaseId - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local data = json.decode(value)
+	rustorecore.show_toast("Confirm: "..data.purchaseId)
+end
+
+function _on_confirm_purchase_failure(self, channel, value)
+	-- json fields:
+	-- purchaseId - string
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local data = json.decode(value)
+	rustorecore.show_toast(data.detailMessage)
+end
+
+-- 
+-- Delete purchase
+-- 
+function _on_delete_purchase_success(self, channel, value)
+	-- json fields:
+	-- purchaseId - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local data = json.decode(value)
+	rustorecore.show_toast("Deleted: "..data.purchaseId)
+end
+
+function _on_delete_purchase_failure(self, channel, value)
+	-- json fields:
+	-- purchaseId - string
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local data = json.decode(value)
+	rustorecore.show_toast(data.detailMessage)
+end
+
+-- 
+-- Get purchase info
+-- 
+function _on_get_purchase_info_success(self, channel, value)
+	-- json fields:
+
+	local data = json.decode(value)
+	rustorecore.log_warning(LOG_TAG, value)
+end
+
+function _on_get_purchase_info_failure(self, channel, value)
+	-- json fields:
+	-- purchaseId - string
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local data = json.decode(value)
+	rustorecore.show_toast(data.detailMessage)
+end
