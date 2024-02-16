@@ -8,7 +8,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 33
         versionCode sdk_version_code
         versionName "${rustore_billingclient_version}"
@@ -54,7 +54,7 @@ dependencies {
 }
 
 task createJar(type: Copy) {
-    def aarFile = file( [buildDir.absolutePath, 'outputs', 'aar', "${project.name}-release.aar"].join(File.separator) )
+    def aarFile = file( [buildDir.absolutePath, 'outputs', 'aar', "${project.name}-${rustore_sdk_build_variant}.aar"].join(File.separator) )
     def outputDir = file( ["$rustore_example_folder", 'extension_rustore_billing', 'lib', 'android'].join(File.separator) )
 
     from zipTree(aarFile)

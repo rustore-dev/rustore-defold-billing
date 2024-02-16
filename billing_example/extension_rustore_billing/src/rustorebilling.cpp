@@ -104,12 +104,12 @@ static int PurchaseProduct(lua_State* L)
     jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.billing.RuStoreBilling");
     jmethodID method = env->GetStaticMethodID(cls, "purchaseProduct", "(Ljava/lang/String;)V");
 
-    const char* productId = (char*)luaL_checkstring(L, 1);
-    jstring jproductId = env->NewStringUTF(productId);
+    const char* params = (char*)luaL_checkstring(L, 1);
+    jstring jparams = env->NewStringUTF(params);
 
-    env->CallStaticVoidMethod(cls, method, jproductId);
+    env->CallStaticVoidMethod(cls, method, jparams);
 
-    env->DeleteLocalRef(jproductId);
+    env->DeleteLocalRef(jparams);
     
     thread.Detach();
 
