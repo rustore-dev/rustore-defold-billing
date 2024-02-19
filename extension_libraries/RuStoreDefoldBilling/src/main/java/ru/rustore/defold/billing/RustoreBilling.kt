@@ -2,22 +2,15 @@ package ru.rustore.defold.billing
 
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
 import com.google.gson.Gson
 import ru.rustore.defold.billing.model.PurchaseProductParams
 import ru.rustore.defold.core.RuStoreCore
 import ru.rustore.sdk.billingclient.RuStoreBillingClient
 import ru.rustore.sdk.billingclient.RuStoreBillingClientFactory
-import ru.rustore.sdk.billingclient.model.product.Product
-import ru.rustore.sdk.billingclient.model.purchase.PaymentResult
-import ru.rustore.sdk.billingclient.model.purchase.Purchase
+import ru.rustore.sdk.billingclient.provider.logger.ExternalPaymentLogger
 import ru.rustore.sdk.core.feature.model.FeatureAvailabilityResult
 
-object RuStoreBilling {
-    const val CANCELLED = "cancelled"
-    const val SUCCESS = "success"
-    const val FAILURE = "failure"
-
+object RuStoreBilling : ExternalPaymentLogger {
     const val CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS = "rustore_check_purchases_available_success"
     const val CHANNEL_CHECK_PURCHASES_AVAILABLE_FAILURE = "rustore_check_purchases_available_failure"
     const val CHANNEL_ON_GET_PRODUCTS_SUCCESS = "rustore_on_get_products_success"
@@ -32,9 +25,15 @@ object RuStoreBilling {
     const val CHANNEL_ON_DELETE_PURCHASE_FAILURE = "rustore_on_delete_purchase_failure"
     const val CHANNEL_ON_GET_PURCHASE_INFO_SUCCESS = "rustore_on_get_purchase_info_success"
     const val CHANNEL_ON_GET_PURCHASE_INFO_FAILURE = "rustore_on_get_purchase_info_failure"
+    const val CHANNEL_ON_PAYMENT_LOGGER_DEBUG = "rustore_on_payment_logger_debug"
+    const val CHANNEL_ON_PAYMENT_LOGGER_ERROR = "rustore_on_payment_logger_error"
+    const val CHANNEL_ON_PAYMENT_LOGGER_INFO = "rustore_on_payment_logger_info"
+    const val CHANNEL_ON_PAYMENT_LOGGER_VERBOSE = "rustore_on_payment_logger_verbose"
+    const val CHANNEL_ON_PAYMENT_LOGGER_WARNING = "rustore_on_payment_logger_warning"
 
     private var client: RuStoreBillingClient? = null
     private val gson = Gson()
+    private var tag = ""
     private var isInitialized = false
 
     @JvmStatic
@@ -43,7 +42,7 @@ object RuStoreBilling {
     }
 
     @JvmStatic
-    fun init(activity: Activity, id: String, scheme: String) {
+    fun init(activity: Activity, id: String, scheme: String, debugLogs: Boolean, externalPaymentLogger: Boolean) {
         client = RuStoreBillingClientFactory.create(
             context = activity.application,
             consoleApplicationId = id,
@@ -51,7 +50,9 @@ object RuStoreBilling {
             internalConfig = mapOf(
                 "type" to "defold"
             ),
-            themeProvider = RuStoreBillingClientThemeProviderImpl
+            themeProvider = RuStoreBillingClientThemeProviderImpl,
+            debugLogs = debugLogs,
+            externalPaymentLoggerFactory = if (externalPaymentLogger) { tag -> this.tag = tag; this } else null
         )
 
         if (!isInitialized) {
@@ -206,5 +207,25 @@ object RuStoreBilling {
     fun onNewIntent(intent: Intent) {
         if (!isInitialized) return
         client?.onNewIntent(intent)
+    }
+
+    override fun d(e: Throwable?, message: () -> String) {
+        RuStoreCore.emitSignal(CHANNEL_ON_PAYMENT_LOGGER_DEBUG, SignalConverter.paymentLogger(e, message()))
+    }
+
+    override fun e(e: Throwable?, message: () -> String) {
+        RuStoreCore.emitSignal(CHANNEL_ON_PAYMENT_LOGGER_ERROR, SignalConverter.paymentLogger(e, message()))
+    }
+
+    override fun i(e: Throwable?, message: () -> String) {
+        RuStoreCore.emitSignal(CHANNEL_ON_PAYMENT_LOGGER_INFO, SignalConverter.paymentLogger(e, message()))
+    }
+
+    override fun v(e: Throwable?, message: () -> String) {
+        RuStoreCore.emitSignal(CHANNEL_ON_PAYMENT_LOGGER_VERBOSE, SignalConverter.paymentLogger(e, message()))
+    }
+
+    override fun w(e: Throwable?, message: () -> String) {
+        RuStoreCore.emitSignal(CHANNEL_ON_PAYMENT_LOGGER_WARNING, SignalConverter.paymentLogger(e, message()))
     }
 }
