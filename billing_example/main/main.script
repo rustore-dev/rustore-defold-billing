@@ -5,8 +5,8 @@ require("main.gui.purchase_actions_consts")
 
 local THIS_RECEIVER = "background#main"
 local LOG_TAG = "ssss"
-local APPLICATION_ID = "184062"
 local DEEPLINK_SCHEME = "example"
+local APPLICATION_ID = "184062"
 local PRODUCT_IDS = { "ue_non_con2", "ue_non_con1", "ue_con2", "ue_con1", "ue_sub2", "ue_sub1" }
 
 local _data_collection = {}
@@ -107,25 +107,33 @@ function on_message(self, message_id, message, sender)
 	
 	if message_id == hash(PRODUCT_ACTIONS_BUTTON_PRESSED) then
 		if message.button == PRODUCT_ACTIONS_BUY_BUTTON then
-			local data = _data_collection[_slider_position] 
-			rustorebilling.purchase_product(data.productId)
+			local data = _data_collection[_slider_position]
+
+			local jsonParams = "{" ..
+				"\"productId\":\"" .. data.productId .. "\"," ..
+				"\"orderId\":null," ..
+				"\"quantity\":null," ..
+				"\"payload\":null" ..
+			"}"
+			
+			rustorebilling.purchase_product(jsonParams)
 		end
 	end
 
 	if message_id == hash(PURCHASE_ACTIONS_BUTTON_PRESSED) then
 		if message.button == PURCHASE_ACTIONS_CONFIRM_BUTTON then
 			local data = _data_collection[_slider_position] 
-			rustorebilling.confirm_purchase(data.productId)
+			rustorebilling.confirm_purchase(data.purchaseId)
 		end
 
 		if message.button == PURCHASE_ACTIONS_DELETE_BUTTON then
 			local data = _data_collection[_slider_position] 
-			rustorebilling.delete_purchase(data.productId)
+			rustorebilling.delete_purchase(data.purchaseId)
 		end
 
 		if message.button == PURCHASE_ACTIONS_INFO_BUTTON then
 			local data = _data_collection[_slider_position] 
-			rustorebilling.get_purchase_info(data.productId)
+			rustorebilling.get_purchase_info(data.purchaseId)
 		end
 	end
 end
@@ -343,9 +351,25 @@ end
 -- 
 function _on_get_purchase_info_success(self, channel, value)
 	-- json fields:
+	-- amount - number
+	-- amountLabel - string
+	-- currency - string
+	-- developerPayload - string
+	-- invoiceId - string
+	-- language - string
+	-- orderId - string
+	-- productId - string
+	-- productType - string
+	-- purchaseId - string
+	-- purchaseState - string
+	-- purchaseTime - string
+	-- quantity - number
+	-- subscriptionToken - string
+
+	rustorecore.log_warning(LOG_TAG, value)
 
 	local data = json.decode(value)
-	rustorecore.log_warning(LOG_TAG, value)
+	rustorecore.show_toast(data.purchaseId)
 end
 
 function _on_get_purchase_info_failure(self, channel, value)

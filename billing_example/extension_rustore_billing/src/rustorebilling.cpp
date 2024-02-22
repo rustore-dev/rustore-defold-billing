@@ -17,15 +17,22 @@ static int Init(lua_State* L)
     JNIEnv* env = thread.GetEnv();
 
     jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.billing.RuStoreBilling");
-    jmethodID method = env->GetStaticMethodID(cls, "init", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;)V");
+    jmethodID method = env->GetStaticMethodID(cls, "init", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;ZZ)V");
 
     const char* id = (char*)luaL_checkstring(L, 1);
     const char* scheme = (char*)luaL_checkstring(L, 2);
 
     jstring jid = env->NewStringUTF(id);
     jstring jscheme = env->NewStringUTF(scheme);
+    jboolean jdebugLogs = false;
+    jboolean jpaymentLogger = false;
 
-    env->CallStaticVoidMethod(cls, method, dmGraphics::GetNativeAndroidActivity(), jid, jscheme);
+    int n = lua_gettop(L);
+
+    if (n > 2) jdebugLogs = (jboolean)lua_toboolean(L, 3);
+    if (n > 3) jpaymentLogger = (jboolean)lua_toboolean(L, 4);
+
+    env->CallStaticVoidMethod(cls, method, dmGraphics::GetNativeAndroidActivity(), jid, jscheme, jdebugLogs, jpaymentLogger);
 
     env->DeleteLocalRef(jid);
     env->DeleteLocalRef(jscheme);
@@ -104,12 +111,12 @@ static int PurchaseProduct(lua_State* L)
     jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.billing.RuStoreBilling");
     jmethodID method = env->GetStaticMethodID(cls, "purchaseProduct", "(Ljava/lang/String;)V");
 
-    const char* productId = (char*)luaL_checkstring(L, 1);
-    jstring jproductId = env->NewStringUTF(productId);
+    const char* params = (char*)luaL_checkstring(L, 1);
+    jstring jparams = env->NewStringUTF(params);
 
-    env->CallStaticVoidMethod(cls, method, jproductId);
+    env->CallStaticVoidMethod(cls, method, jparams);
 
-    env->DeleteLocalRef(jproductId);
+    env->DeleteLocalRef(jparams);
     
     thread.Detach();
 
