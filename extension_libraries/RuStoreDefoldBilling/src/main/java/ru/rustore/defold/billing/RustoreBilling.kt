@@ -42,7 +42,7 @@ object RuStoreBilling : ExternalPaymentLogger {
     }
 
     @JvmStatic
-    fun init(activity: Activity, id: String, scheme: String, debugLogs: Boolean, externalPaymentLogger: Boolean) {
+    fun init(activity: Activity, id: String, scheme: String, debugLogs: Boolean) {
         client = RuStoreBillingClientFactory.create(
             context = activity.application,
             consoleApplicationId = id,
@@ -52,7 +52,7 @@ object RuStoreBilling : ExternalPaymentLogger {
             ),
             themeProvider = RuStoreBillingClientThemeProviderImpl,
             debugLogs = debugLogs,
-            externalPaymentLoggerFactory = if (externalPaymentLogger) { tag -> this.tag = tag; this } else null
+            externalPaymentLoggerFactory = if (debugLogs) { tag -> this.tag = tag; this } else null
         )
 
         if (!isInitialized) {

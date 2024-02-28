@@ -7,6 +7,7 @@ local THIS_RECEIVER = "background#main"
 local LOG_TAG = "ssss"
 local DEEPLINK_SCHEME = "example"
 local APPLICATION_ID = "184062"
+local DEBUG_LOGS = true
 local PRODUCT_IDS = { "ue_non_con2", "ue_non_con1", "ue_con2", "ue_con1", "ue_sub2", "ue_sub1" }
 
 local _data_collection = {}
@@ -45,8 +46,13 @@ function init(self)
 	rustorecore.connect("rustore_on_delete_purchase_failure", _on_delete_purchase_failure)
 	rustorecore.connect("rustore_on_get_purchase_info_success", _on_get_purchase_info_success)
 	rustorecore.connect("rustore_on_get_purchase_info_failure", _on_get_purchase_info_failure)
-	rustorebilling.init(APPLICATION_ID, DEEPLINK_SCHEME)
+	rustorecore.connect("rustore_on_payment_logger_debug", _on_payment_logger_debug)
+	rustorecore.connect("rustore_on_payment_logger_error", _on_payment_logger_error)
+	rustorecore.connect("rustore_on_payment_logger_info", _on_payment_logger_info)
+	rustorecore.connect("rustore_on_payment_logger_verbose", _on_payment_logger_verbose)
+	rustorecore.connect("rustore_on_payment_logger_warning", _on_payment_logger_warning)
 	rustorebilling.set_theme(0)
+	rustorebilling.init(APPLICATION_ID, DEEPLINK_SCHEME, DEBUG_LOGS)
 
 	-- Top menu
 	msg.post(TOP_MENU_RECEIVER, TOP_MENU_SET_RECEIVER_MESSAGE_ID, { receiver = THIS_RECEIVER })
@@ -268,13 +274,13 @@ function _on_get_purchases_success(self, channel, value)
 
 	for key, value in pairs(_data_collection) do
 		local s_info = ""
-		s_info = s_info.."Purchase Id: "..value.purchaseId.."\n"
-		s_info = s_info.."Time: "..value.purchaseTime.."\n"
-		s_info = s_info.."Type: "..value.productType.."\n"
-		s_info = s_info.."State: "..value.purchaseState.."\n"
-		s_info = s_info.."Price: "..value.amountLabel.."\n"
-		s_info = s_info.."Invoice Id: "..value.invoiceId.."\n"
-		s_info = s_info.."Order Id: "..value.orderId
+		s_info = s_info.."Purchase Id: "..value.purchaseId:gsub("-", " - ").."\n\n"
+		s_info = s_info.."Time: "..value.purchaseTime.."\n\n"
+		s_info = s_info.."Type: "..value.productType.."\n\n"
+		s_info = s_info.."State: "..value.purchaseState.."\n\n"
+		s_info = s_info.."Price: "..value.amountLabel.."\n\n"
+		s_info = s_info.."Invoice Id: "..value.invoiceId.."\n\n"
+		s_info = s_info.."Order Id: "..value.orderId:gsub("-", " - ")
 		
 		table.insert(_slider_collection, s_info)
 	end
@@ -381,4 +387,49 @@ function _on_get_purchase_info_failure(self, channel, value)
 
 	local data = json.decode(value)
 	rustorecore.show_toast(data.detailMessage)
+end
+
+function _on_payment_logger_debug(self, channel, value)
+	-- json fields:
+	-- e - throwable or null
+	-- -- detailMessage - string
+	-- message - string
+	
+	rustorecore.log_debug(LOG_TAG, value)
+end
+
+function _on_payment_logger_error(self, channel, value)
+	-- json fields:
+	-- e - throwable or null
+	-- -- detailMessage - string
+	-- message - string
+	
+	rustorecore.log_error(LOG_TAG, value)
+end
+
+function _on_payment_logger_info(self, channel, value)
+	-- json fields:
+	-- e - throwable or null
+	-- -- detailMessage - string
+	-- message - string
+	
+	rustorecore.log_info(LOG_TAG, value)
+end		
+
+function _on_payment_logger_verbose(self, channel, value)
+	-- json fields:
+	-- e - throwable or null
+	-- -- detailMessage - string
+	-- message - string
+	
+	rustorecore.log_verbose(LOG_TAG, value)
+end
+
+function _on_payment_logger_warning(self, channel, value)
+	-- json fields:
+	-- e - throwable or null
+	-- -- detailMessage - string
+	-- message - string
+	
+	rustorecore.log_warning(LOG_TAG, value)
 end
