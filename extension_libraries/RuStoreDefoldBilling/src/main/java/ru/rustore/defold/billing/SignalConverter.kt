@@ -1,17 +1,12 @@
 package ru.rustore.defold.billing
 
-import com.google.gson.Gson
+import ru.rustore.defold.core.JsonBuilder
 
 object SignalConverter {
 
     fun paymentLogger(e: Throwable?, message: String): String {
-        val gson = Gson()
-        val throwable = gson.toJson(e)
+        val throwable = JsonBuilder.toJson(e)
 
-        return "{\"e\": \"${throwable}\", \"message\": \"${message}\"}"
-    }
-
-    fun purchaseError(purchaseId: String, throwable: Throwable): String {
-        return "{\"purchaseId\": \"${purchaseId}\", \"detailMessage\": \"${throwable.message}\"}"
+        return "{\"e\": \"$throwable\", \"message\": \"${message}\"}"
     }
 }

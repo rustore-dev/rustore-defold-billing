@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import com.google.gson.Gson
 import ru.rustore.defold.billing.model.PurchaseProductParams
+import ru.rustore.defold.core.JsonBuilder
 import ru.rustore.defold.core.RuStoreCore
 import ru.rustore.sdk.billingclient.RuStoreBillingClient
 import ru.rustore.sdk.billingclient.RuStoreBillingClientFactory
@@ -34,7 +35,22 @@ object RuStoreBilling : ExternalPaymentLogger {
     private var client: RuStoreBillingClient? = null
     private val gson = Gson()
     private var tag = ""
+    private var allowErrorHandling: Boolean = false
     private var isInitialized = false
+
+    @JvmStatic
+    fun setErrorHandling(allowErrorHandling: Boolean) {
+        this.allowErrorHandling = allowErrorHandling
+    }
+
+    @JvmStatic
+    fun getErrorHandling() : Boolean {
+        return allowErrorHandling
+    }
+
+    private fun handleError(throwable: Throwable) {
+        // TO DO
+    }
 
     @JvmStatic
     fun getBillingClient(): RuStoreBillingClient? {
@@ -73,19 +89,19 @@ object RuStoreBilling : ExternalPaymentLogger {
                         is FeatureAvailabilityResult.Available -> {
                             RuStoreCore.emitSignal(
                                 CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS,
-                                "{\"isAvailable\": true, \"detailMessage\": \"\"}"
+                                """{"isAvailable": true}"""
                             )
                         }
                         is FeatureAvailabilityResult.Unavailable -> {
-                            RuStoreCore.emitSignal(
-                                CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS,
-                                "{\"isAvailable\": false, \"detailMessage\": \"${result.cause.message}\"}"
-                            )
+                            val cause = JsonBuilder.toJson(result.cause)
+                            val json = """{"isAvailable": false, "cause": $cause}"""
+                            handleError(result.cause)
+                            RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS, json)
                         }
                     }
                 }
                 .addOnFailureListener { throwable ->
-                    RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_FAILURE, gson.toJson(throwable))
+                    RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_FAILURE, JsonBuilder.toJson(throwable))
                 }
         }
     }
@@ -98,7 +114,7 @@ object RuStoreBilling : ExternalPaymentLogger {
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PRODUCTS_SUCCESS, gson.toJson(result))
                 }
                 .addOnFailureListener { throwable ->
-                    RuStoreCore.emitSignal(CHANNEL_ON_GET_PRODUCTS_FAILURE, gson.toJson(throwable))
+                    RuStoreCore.emitSignal(CHANNEL_ON_GET_PRODUCTS_FAILURE, JsonBuilder.toJson(throwable))
                 }
             }
     }
@@ -119,10 +135,10 @@ object RuStoreBilling : ExternalPaymentLogger {
                     RuStoreCore.emitSignal(CHANNEL_ON_PURCHASE_PRODUCT_SUCCESS, json)
                 }
                 .addOnFailureListener { throwable ->
-                    RuStoreCore.emitSignal(
-                        CHANNEL_ON_PURCHASE_PRODUCT_FAILURE,
-                        "{\"productId\": \"${params.productId}\", \"detailMessage\": \"${throwable.message}\"}"
-                    )
+                    val cause = JsonBuilder.toJson(throwable)
+                    val json = """{"productId": "${params.productId}", "cause": $cause}"""
+                    handleError(throwable)
+                    RuStoreCore.emitSignal(CHANNEL_ON_PURCHASE_PRODUCT_FAILURE, json)
                 }
         }
     }
@@ -135,7 +151,8 @@ object RuStoreBilling : ExternalPaymentLogger {
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PURCHASES_SUCCESS, gson.toJson(result))
                 }
                 .addOnFailureListener { throwable ->
-                    RuStoreCore.emitSignal(CHANNEL_ON_GET_PURCHASES_FAILURE, gson.toJson(throwable))
+                    handleError(throwable)
+                    RuStoreCore.emitSignal(CHANNEL_ON_GET_PURCHASES_FAILURE, JsonBuilder.toJson(throwable))
                 }
         }
     }
@@ -153,10 +170,10 @@ object RuStoreBilling : ExternalPaymentLogger {
                     )
                 }
                 .addOnFailureListener { throwable ->
-                    RuStoreCore.emitSignal(
-                        CHANNEL_ON_CONFIRM_PURCHASE_FAILURE,
-                        "{\"purchaseId\": \"${purchaseId}\", \"detailMessage\": \"${throwable.message}\"}"
-                    )
+                    val cause = JsonBuilder.toJson(throwable)
+                    val json = """{"purchaseId": "$purchaseId", "cause": $cause}"""
+                    handleError(throwable)
+                    RuStoreCore.emitSignal(CHANNEL_ON_CONFIRM_PURCHASE_FAILURE, json)
                 }
         }
     }
@@ -174,10 +191,10 @@ object RuStoreBilling : ExternalPaymentLogger {
                     )
                 }
                 .addOnFailureListener { throwable ->
-                    RuStoreCore.emitSignal(
-                        CHANNEL_ON_DELETE_PURCHASE_FAILURE,
-                        "{\"purchaseId\": \"${purchaseId}\", \"detailMessage\": \"${throwable.message}\"}"
-                    )
+                    val cause = JsonBuilder.toJson(throwable)
+                    val json = """{"purchaseId": "$purchaseId", "cause": $cause}"""
+                    handleError(throwable)
+                    RuStoreCore.emitSignal(CHANNEL_ON_DELETE_PURCHASE_FAILURE, json)
                 }
         }
     }
@@ -190,10 +207,10 @@ object RuStoreBilling : ExternalPaymentLogger {
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PURCHASE_INFO_SUCCESS, gson.toJson(result))
                 }
                 .addOnFailureListener { throwable ->
-                    RuStoreCore.emitSignal(
-                        CHANNEL_ON_GET_PURCHASE_INFO_FAILURE,
-                        "{\"purchaseId\": \"${purchaseId}\", \"detailMessage\": \"${throwable.message}\"}"
-                    )
+                    val cause = JsonBuilder.toJson(throwable)
+                    val json = """{"purchaseId": "$purchaseId", "cause": $cause}"""
+                    handleError(throwable)
+                    RuStoreCore.emitSignal(CHANNEL_ON_GET_PURCHASE_INFO_FAILURE, json)
                 }
         }
     }
