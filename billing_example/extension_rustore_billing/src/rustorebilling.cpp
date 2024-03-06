@@ -243,7 +243,7 @@ static int SetErrorHandling(lua_State* L)
     jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.billing.RuStoreBilling");
     jmethodID method = env->GetStaticMethodID(cls, "setErrorHandling", "(Z)V");
 
-    jvalue = (jboolean)lua_toboolean(L, 1);
+    jboolean jvalue = (jboolean)lua_toboolean(L, 1);
 
     env->CallStaticVoidMethod(cls, method, jvalue);
 
