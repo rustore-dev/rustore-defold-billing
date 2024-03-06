@@ -28,6 +28,15 @@ local function _set_slider_page(collection, num)
 	end
 end
 
+local function _update_purchases()
+	msg.post(SLIDER_RECEIVER, SLIDER_SET_TITLE_MESSAGE_ID, { title = "" })
+	msg.post(SLIDER_RECEIVER, SLIDER_SET_INFO_MESSAGE_ID, { info = "Loading..." })
+	msg.post(PRODUCT_ACTIONS_RECEIVER, PRODUCT_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+	msg.post(PURCHASE_ACTIONS_RECEIVER, PURCHASE_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
+
+	rustorebilling.get_purchases()
+end
+
 function init(self)
 	msg.post(".", "acquire_input_focus")
 	msg.post("@render:", "use_fixed_fit_projection", { near = -1, far = 1 })
@@ -88,12 +97,7 @@ function on_message(self, message_id, message, sender)
 		end
 
 		if message.button == TOP_MENU_PURCHASES then
-			msg.post(SLIDER_RECEIVER, SLIDER_SET_TITLE_MESSAGE_ID, { title = "" })
-			msg.post(SLIDER_RECEIVER, SLIDER_SET_INFO_MESSAGE_ID, { info = "Loading..." })
-			msg.post(PRODUCT_ACTIONS_RECEIVER, PRODUCT_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
-			msg.post(PURCHASE_ACTIONS_RECEIVER, PURCHASE_ACTIONS_SET_ENABLED_MESSAGE_ID, { enabled = false })
-			
-			rustorebilling.get_purchases()
+			_update_purchases()
 		end
 	end
 
@@ -114,15 +118,13 @@ function on_message(self, message_id, message, sender)
 	if message_id == hash(PRODUCT_ACTIONS_BUTTON_PRESSED) then
 		if message.button == PRODUCT_ACTIONS_BUY_BUTTON then
 			local data = _data_collection[_slider_position]
-
 			local jsonParams = "{" ..
-				"\"productId\":\"" .. data.productId .. "\"," ..
 				"\"orderId\":null," ..
 				"\"quantity\":null," ..
 				"\"payload\":null" ..
 			"}"
 			
-			rustorebilling.purchase_product(jsonParams)
+			rustorebilling.purchase_product(data.productId, jsonParams)
 		end
 	end
 
@@ -150,7 +152,7 @@ end
 function _check_purchases_available_success(self, channel, value)
 	-- json fields:
 	-- isAvailable - boolean
-	-- cause - Throwable or absent
+	-- cause - json or absent
 	-- -- simpleName - string
 	-- -- detailMessage - string
 
@@ -184,15 +186,22 @@ function _on_get_products_success(self, channel, value)
 	-- [] - array of products
 	-- -- currency - string
 	-- -- description - string
-	-- -- imageUrl - json {"cachedFsi":-2,"cachedSsi":-2,"scheme":"NOT CACHED","uriString":"","host":"NOT CACHED","port":-2},
+	-- -- imageUrl - json
+	-- -- -- uriString - string or absent
 	-- -- language - string
 	-- -- price - number
 	-- -- priceLabel - string
 	-- -- productId - string
 	-- -- productStatus - string
 	-- -- productType -- string
-	-- -- promoImageUrl - json {"cachedFsi":-2,"cachedSsi":-2,"scheme":"NOT CACHED","uriString":"","host":"NOT CACHED","port":-2}
+	-- -- promoImageUrl - json
+	-- -- -- uriString - string or absent
 	-- -- title - string
+	-- -- subscription - json or absent
+	-- -- -- subscriptionPeriod - json
+	-- -- -- -- days - number
+	-- -- -- -- months - number
+	-- -- -- -- years - number
 
 	rustorecore.log_warning(LOG_TAG, value)
 	
@@ -235,6 +244,15 @@ end
 -- 
 function _on_purchase_product_success(self, channel, value)
 	-- json fields:
+	-- type - string
+	-- data - json (for Succes type)
+	-- -- purchaseId - string
+	-- -- invoiceId - string
+	-- -- orderId - string
+	-- -- productId - string
+	-- -- subscriptionToken - string
+	-- data - json (for Cancelled type)
+	-- -- purchaseId - string
 
 	rustorecore.log_warning(LOG_TAG, value)
 	
@@ -244,7 +262,7 @@ end
 function _on_purchase_product_failure(self, channel, value)
 	-- json fields:
 	-- productId - string
-	-- cause - Throwable
+	-- cause - json
 	-- -- simpleName - string
 	-- -- detailMessage - string
 
@@ -263,6 +281,8 @@ function _on_get_purchases_success(self, channel, value)
 	-- -- amount - number
 	-- -- amountLabel - string
 	-- -- currency - string
+	-- -- description - string
+	-- -- developerPayload - string
 	-- -- invoiceId - string
 	-- -- language - string
 	-- -- orderId - string
@@ -272,7 +292,7 @@ function _on_get_purchases_success(self, channel, value)
 	-- -- purchaseState - string
 	-- -- purchaseTime - string
 	-- -- quantity - number
-	-- -- subscriptionToken
+	-- -- subscriptionToken - string
 	
 	rustorecore.log_warning(LOG_TAG, value)
 	
@@ -323,12 +343,14 @@ function _on_confirm_purchase_success(self, channel, value)
 
 	local data = json.decode(value)
 	rustorecore.show_toast("Confirm: "..data.purchaseId)
+
+	_update_purchases()
 end
 
 function _on_confirm_purchase_failure(self, channel, value)
 	-- json fields:
 	-- purchaseId - string
-	-- cause - Throwable
+	-- cause - json
 	-- -- simpleName - string
 	-- -- detailMessage - string
 
@@ -349,12 +371,14 @@ function _on_delete_purchase_success(self, channel, value)
 
 	local data = json.decode(value)
 	rustorecore.show_toast("Deleted: "..data.purchaseId)
+
+	_update_purchases()
 end
 
 function _on_delete_purchase_failure(self, channel, value)
 	-- json fields:
 	-- purchaseId - string
-	-- cause - Throwable
+	-- cause - json
 	-- -- simpleName - string
 	-- -- detailMessage - string
 
@@ -393,7 +417,7 @@ end
 function _on_get_purchase_info_failure(self, channel, value)
 	-- json fields:
 	-- purchaseId - string
-	-- cause - Throwable
+	-- cause - json
 	-- -- simpleName - string
 	-- -- detailMessage - string
 
@@ -405,7 +429,7 @@ end
 
 function _on_payment_logger_debug(self, channel, value)
 	-- json fields:
-	-- e - Throwable or "null"
+	-- e - json or "null"
 	-- -- simpleName - string
 	-- -- detailMessage - string
 	-- message - string
@@ -415,7 +439,7 @@ end
 
 function _on_payment_logger_error(self, channel, value)
 	-- json fields:
-	-- e - Throwable or "null"
+	-- e - json or "null"
 	-- -- simpleName - string
 	-- -- detailMessage - string
 	-- message - string
@@ -425,7 +449,7 @@ end
 
 function _on_payment_logger_info(self, channel, value)
 	-- json fields:
-	-- e - Throwable or "null"
+	-- e - json or "null"
 	-- -- simpleName - string
 	-- -- detailMessage - string
 	-- message - string
@@ -435,7 +459,7 @@ end
 
 function _on_payment_logger_verbose(self, channel, value)
 	-- json fields:
-	-- e - Throwable or "null"
+	-- e - json or "null"
 	-- -- simpleName - string
 	-- -- detailMessage - string
 	-- message - string
@@ -445,7 +469,7 @@ end
 
 function _on_payment_logger_warning(self, channel, value)
 	-- json fields:
-	-- e - Throwable or "null"
+	-- e - json or "null"
 	-- -- simpleName - string
 	-- -- detailMessage - string
 	-- message - string

@@ -120,12 +120,12 @@ object RuStoreBilling : ExternalPaymentLogger {
     }
 
     @JvmStatic
-    fun purchaseProduct(jsonParams: String) {
+    fun purchaseProduct(productId: String, jsonParams: String) {
         val params = gson.fromJson(jsonParams, PurchaseProductParams::class.java)
 
         client?.run {
             purchases.purchaseProduct(
-                productId = params.productId,
+                productId = productId,
                 orderId = params.orderId,
                 quantity = params.quantity,
                 developerPayload = params.payload
@@ -136,7 +136,7 @@ object RuStoreBilling : ExternalPaymentLogger {
                 }
                 .addOnFailureListener { throwable ->
                     val cause = JsonBuilder.toJson(throwable)
-                    val json = """{"productId": "${params.productId}", "cause": $cause}"""
+                    val json = """{"productId": "$productId", "cause": $cause}"""
                     handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_ON_PURCHASE_PRODUCT_FAILURE, json)
                 }

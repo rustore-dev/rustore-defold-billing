@@ -27,7 +27,6 @@ static int Init(lua_State* L)
     jboolean jdebugLogs = false;
 
     int n = lua_gettop(L);
-
     if (n > 2) jdebugLogs = (jboolean)lua_toboolean(L, 3);
 
     env->CallStaticVoidMethod(cls, method, dmGraphics::GetNativeAndroidActivity(), jid, jscheme, jdebugLogs);
@@ -107,13 +106,24 @@ static int PurchaseProduct(lua_State* L)
     JNIEnv* env = thread.GetEnv();
 
     jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.billing.RuStoreBilling");
-    jmethodID method = env->GetStaticMethodID(cls, "purchaseProduct", "(Ljava/lang/String;)V");
+    jmethodID method = env->GetStaticMethodID(cls, "purchaseProduct", "(Ljava/lang/String;Ljava/lang/String;)V");
 
-    const char* params = (char*)luaL_checkstring(L, 1);
-    jstring jparams = env->NewStringUTF(params);
+    const char* productId = (char*)luaL_checkstring(L, 1);
+    jstring jproductId = env->NewStringUTF(productId);
 
-    env->CallStaticVoidMethod(cls, method, jparams);
+    jstring jparams;
+    
+    int n = lua_gettop(L);
+    if (n > 1) {
+        const char* params = (char*)luaL_checkstring(L, 2);
+        jparams = env->NewStringUTF(params);
+    } else {
+        jparams = env->NewStringUTF("");
+    }
 
+    env->CallStaticVoidMethod(cls, method, jproductId, jparams);
+
+    env->DeleteLocalRef(jproductId);
     env->DeleteLocalRef(jparams);
     
     thread.Detach();
@@ -223,6 +233,25 @@ static int SetTheme(lua_State* L)
     return 0;
 }
 
+static int SetErrorHandling(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.billing.RuStoreBilling");
+    jmethodID method = env->GetStaticMethodID(cls, "setErrorHandling", "(Z)V");
+
+    jvalue = (jboolean)lua_toboolean(L, 1);
+
+    env->CallStaticVoidMethod(cls, method, jvalue);
+
+    thread.Detach();
+
+    return 0;
+}
+
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
 {
@@ -235,6 +264,7 @@ static const luaL_reg Module_methods[] =
     {"delete_purchase", DeletePurchase},
     {"get_purchase_info", GetPurchaseInfo},
     {"set_theme", SetTheme},
+    {"set_error_handling", SetErrorHandling},
     {0, 0}
 };
 
