@@ -61,6 +61,7 @@ function init(self)
 	rustorecore.connect("rustore_on_payment_logger_verbose", _on_payment_logger_verbose)
 	rustorecore.connect("rustore_on_payment_logger_warning", _on_payment_logger_warning)
 	rustorebilling.set_theme(0)
+	rustorebilling.set_error_handling(true)
 	rustorebilling.init(APPLICATION_ID, DEEPLINK_SCHEME, DEBUG_LOGS)
 
 	-- Top menu

@@ -6,19 +6,49 @@
 
 #include "RuStoreChannelListener.h"
 #include "ChannelCallbackManager.h"
+#include "AndroidJavaObject.h"
 
 using namespace RuStoreSDK;
+
+static void GatJavaCoreInstance(JNIEnv* env, AndroidJavaObject* instance)
+{
+    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
+    jfieldID instanceField = env->GetStaticFieldID(cls, "INSTANCE", "Lru/rustore/defold/core/RuStoreCore;");
+    jobject obj = env->GetStaticObjectField(cls, instanceField);
+
+    instance->cls = cls;
+    instance->obj = obj;
+}
+
+static void InitDefoldPlayer()
+{
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    jclass jplayerCls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.wrappers.DefoldPlayerWrapper");
+    jobject jplayerObj = env->NewObject(jplayerCls, env->GetMethodID(jplayerCls, "<init>", "()V"));
+
+    jclass jproviderCls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.PlayerProvider");
+    jfieldID instanceField = env->GetStaticFieldID(jproviderCls, "INSTANCE", "Lru/rustore/defold/core/PlayerProvider;");
+    jobject playerProviderInstance = env->GetStaticObjectField(jproviderCls, instanceField);
+
+    jmethodID method = env->GetMethodID(jproviderCls, "setExternalProvider", "(Lru/rustore/defold/core/IPlayerProvider;)V");
+    env->CallVoidMethod(playerProviderInstance, method, jplayerObj);
+    
+    thread.Detach();
+}
 
 static void InitRuStoreCallbacks()
 {
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
-    
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "setChannelListener", "(Lru/rustore/defold/core/callbacks/IRuStoreChannelListener;)V");
+
     jobject wrapper = RuStoreChannelListener::Instance()->GetJWrapper();
     
-    env->CallStaticVoidMethod(cls, method, wrapper);
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "setChannelListener", "(Lru/rustore/defold/core/callbacks/IRuStoreChannelListener;)V");
+    env->CallVoidMethod(instance.obj, method, wrapper);
 
     thread.Detach();
 }
@@ -42,15 +72,17 @@ static int ShowToast(lua_State* L)
 
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
-    
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "showToast", "(Landroid/app/Activity;Ljava/lang/String;)V");
 
     const char* msg = (char*)luaL_checkstring(L, 1);
     jstring jmsg = env->NewStringUTF(msg);
+    
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "showToast", "(Landroid/app/Activity;Ljava/lang/String;)V");
+    env->CallVoidMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity(), jmsg);
 
-    env->CallStaticVoidMethod(cls, method, dmGraphics::GetNativeAndroidActivity(), jmsg);
-
+    env->DeleteLocalRef(jmsg);
+    
     thread.Detach();
 
     return 0;
@@ -63,16 +95,16 @@ static int LogVerbose(lua_State* L)
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
 
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "logVerbose", "(Ljava/lang/String;Ljava/lang/String;)V");
-
     const char* tag = (char*)luaL_checkstring(L, 1);
     const char* msg = (char*)luaL_checkstring(L, 2);
 
     jstring jtag = env->NewStringUTF(tag);
     jstring jmsg = env->NewStringUTF(msg);
-
-    env->CallStaticVoidMethod(cls, method, jtag, jmsg);
+    
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "logVerbose", "(Ljava/lang/String;Ljava/lang/String;)V");
+    env->CallVoidMethod(instance.obj, method, jtag, jmsg);
 
     env->DeleteLocalRef(jtag);
     env->DeleteLocalRef(jmsg);
@@ -89,16 +121,16 @@ static int LogDebug(lua_State* L)
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
 
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "logDebug", "(Ljava/lang/String;Ljava/lang/String;)V");
-
     const char* tag = (char*)luaL_checkstring(L, 1);
     const char* msg = (char*)luaL_checkstring(L, 2);
 
     jstring jtag = env->NewStringUTF(tag);
     jstring jmsg = env->NewStringUTF(msg);
-
-    env->CallStaticVoidMethod(cls, method, jtag, jmsg);
+    
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "logDebug", "(Ljava/lang/String;Ljava/lang/String;)V");
+    env->CallVoidMethod(instance.obj, method, jtag, jmsg);
 
     env->DeleteLocalRef(jtag);
     env->DeleteLocalRef(jmsg);
@@ -115,16 +147,16 @@ static int LogInfo(lua_State* L)
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
 
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "logInfo", "(Ljava/lang/String;Ljava/lang/String;)V");
-
     const char* tag = (char*)luaL_checkstring(L, 1);
     const char* msg = (char*)luaL_checkstring(L, 2);
 
     jstring jtag = env->NewStringUTF(tag);
     jstring jmsg = env->NewStringUTF(msg);
-
-    env->CallStaticVoidMethod(cls, method, jtag, jmsg);
+    
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "logInfo", "(Ljava/lang/String;Ljava/lang/String;)V");
+    env->CallVoidMethod(instance.obj, method, jtag, jmsg);
 
     env->DeleteLocalRef(jtag);
     env->DeleteLocalRef(jmsg);
@@ -140,17 +172,17 @@ static int LogWarning(lua_State* L)
 
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
-    
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "logWarning", "(Ljava/lang/String;Ljava/lang/String;)V");
 
     const char* tag = (char*)luaL_checkstring(L, 1);
     const char* msg = (char*)luaL_checkstring(L, 2);
 
     jstring jtag = env->NewStringUTF(tag);
     jstring jmsg = env->NewStringUTF(msg);
-
-    env->CallStaticVoidMethod(cls, method, jtag, jmsg);
+    
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "logWarning", "(Ljava/lang/String;Ljava/lang/String;)V");
+    env->CallVoidMethod(instance.obj, method, jtag, jmsg);
 
     env->DeleteLocalRef(jtag);
     env->DeleteLocalRef(jmsg);
@@ -167,16 +199,16 @@ static int LogError(lua_State* L)
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
 
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "logError", "(Ljava/lang/String;Ljava/lang/String;)V");
-
     const char* tag = (char*)luaL_checkstring(L, 1);
     const char* msg = (char*)luaL_checkstring(L, 2);
 
     jstring jtag = env->NewStringUTF(tag);
     jstring jmsg = env->NewStringUTF(msg);
-
-    env->CallStaticVoidMethod(cls, method, jtag, jmsg);
+    
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "logError", "(Ljava/lang/String;Ljava/lang/String;)V");
+    env->CallVoidMethod(instance.obj, method, jtag, jmsg);
 
     env->DeleteLocalRef(jtag);
     env->DeleteLocalRef(jmsg);
@@ -193,13 +225,13 @@ static int CopyToClipboard(lua_State* L)
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
 
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "copyToClipboard", "(Landroid/app/Activity;Ljava/lang/String;)V");
-
     const char* text = (char*)luaL_checkstring(L, 1);
     jstring jtext = env->NewStringUTF(text);
-
-    env->CallStaticVoidMethod(cls, method, dmGraphics::GetNativeAndroidActivity(), jtext);
+    
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "copyToClipboard", "(Landroid/app/Activity;Ljava/lang/String;)V");
+    env->CallVoidMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity(), jtext);
 
     env->DeleteLocalRef(jtext);
 
@@ -215,10 +247,10 @@ static int GetFromClipboard(lua_State* L)
     dmAndroid::ThreadAttacher thread;
     JNIEnv* env = thread.GetEnv();
 
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "getFromClipboard", "(Landroid/app/Activity;)Ljava/lang/String;");
-
-    jstring jtext = (jstring)env->CallStaticObjectMethod(cls, method, dmGraphics::GetNativeAndroidActivity());
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "getFromClipboard", "(Landroid/app/Activity;)Ljava/lang/String;");
+    jstring jtext = (jstring)env->CallObjectMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity());
 
     const char* ctext = env->GetStringUTFChars(jtext, nullptr);
     lua_pushstring(L, ctext);
@@ -239,10 +271,10 @@ static int GetStringResources(lua_State* L)
     const char* name = (char*)luaL_checkstring(L, 1);
     jstring jname = env->NewStringUTF(name);
 
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.core.RuStoreCore");
-    jmethodID method = env->GetStaticMethodID(cls, "getStringResources", "(Landroid/app/Activity;Ljava/lang/String;)Ljava/lang/String;");
-
-    jstring jtext = (jstring)env->CallStaticObjectMethod(cls, method, dmGraphics::GetNativeAndroidActivity(), jname);
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "getStringResources", "(Landroid/app/Activity;Ljava/lang/String;)Ljava/lang/String;");
+    jstring jtext = (jstring)env->CallObjectMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity(), jname);
 
     const char* ctext = env->GetStringUTFChars(jtext, nullptr);
     lua_pushstring(L, ctext);
@@ -288,6 +320,7 @@ static dmExtension::Result AppInitializeMyExtension(dmExtension::AppParams* para
 static dmExtension::Result InitializeMyExtension(dmExtension::Params* params)
 {
     LuaInit(params->m_L);
+    InitDefoldPlayer();
     InitRuStoreCallbacks();
     
     return dmExtension::RESULT_OK;
@@ -332,3 +365,11 @@ static dmExtension::Result UpdateMyExtension(dmExtension::Params* params)
 }
 
 DM_DECLARE_EXTENSION(EXTENSION_NAME, LIB_NAME, AppInitializeMyExtension, AppFinalizeMyExtension, InitializeMyExtension, UpdateMyExtension, nullptr, nullptr)
+
+extern "C"
+{
+    JNIEXPORT jobject JNICALL Java_ru_rustore_defold_core_wrappers_DefoldPlayerWrapper_NativeOnActivityRequest(JNIEnv* env, jobject obj)
+    {
+        return dmGraphics::GetNativeAndroidActivity();
+    }
+}
