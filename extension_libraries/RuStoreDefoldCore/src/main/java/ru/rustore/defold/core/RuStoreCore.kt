@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
 import ru.rustore.defold.core.callbacks.IRuStoreChannelListener
@@ -57,12 +58,44 @@ object RuStoreCore {
         val clipboard: ClipboardManager = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip: ClipData = clipboard.primaryClip ?: return String()
         val text = clip.getItemAt(0).text ?: return String()
+
         return text.toString()
     }
 
     fun getStringResources(activity: Activity, name: String): String {
         val application = activity.application
         val id: Int = application.resources.getIdentifier(name, "string", application.packageName)
+
         return application.getString(id)
+    }
+
+    fun getStringSharedPreferences(activity: Activity, storageName: String, key: String, defaultValue: String): String {
+        val application = activity.application
+        val preferences: SharedPreferences = application.getSharedPreferences(storageName, Context.MODE_PRIVATE)
+
+        return preferences.getString(key, defaultValue).orEmpty()
+    }
+
+    fun getIntSharedPreferences(activity: Activity, storageName: String, key: String, defaultValue: Int): Int {
+        val application = activity.application
+        val preferences: SharedPreferences = application.getSharedPreferences(storageName, Context.MODE_PRIVATE)
+
+        return preferences.getInt(key, defaultValue)
+    }
+
+    fun setStringSharedPreferences(activity: Activity, storageName: String, key: String, value: String) {
+        val application = activity.application
+        val preferences: SharedPreferences = application.getSharedPreferences(storageName, Context.MODE_PRIVATE)
+        val editor = preferences.edit()
+        editor.putString(key, value)
+        editor.apply()
+    }
+
+    fun setIntSharedPreferences(activity: Activity, storageName: String, key: String, value: Int) {
+        val application = activity.application
+        val preferences: SharedPreferences = application.getSharedPreferences(storageName, Context.MODE_PRIVATE)
+        val editor = preferences.edit()
+        editor.putInt(key, value)
+        editor.apply()
     }
 }

@@ -287,6 +287,129 @@ static int GetStringResources(lua_State* L)
     return 1;
 }
 
+static int GetStringSharedPreferences(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 1);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    const char* storageName = (char*)luaL_checkstring(L, 1);
+    jstring jstorageName = env->NewStringUTF(storageName);
+
+    const char* key = (char*)luaL_checkstring(L, 2);
+    jstring jkey = env->NewStringUTF(key);
+
+    const char* defaultValue = (char*)luaL_checkstring(L, 3);
+    jstring jdefaultValue = env->NewStringUTF(defaultValue);
+
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "getStringSharedPreferences", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
+    jstring jtext = (jstring)env->CallObjectMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity(), jstorageName, jkey, jdefaultValue);
+
+    const char* ctext = env->GetStringUTFChars(jtext, nullptr);
+    lua_pushstring(L, ctext);
+    env->ReleaseStringUTFChars(jtext, ctext);
+
+    env->DeleteLocalRef(jstorageName);
+    env->DeleteLocalRef(jkey);
+    env->DeleteLocalRef(jdefaultValue);
+
+    thread.Detach();
+
+    return 1;
+}
+
+
+
+static int SetStringSharedPreferences(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    const char* storageName = (char*)luaL_checkstring(L, 1);
+    jstring jstorageName = env->NewStringUTF(storageName);
+
+    const char* key = (char*)luaL_checkstring(L, 2);
+    jstring jkey = env->NewStringUTF(key);
+
+    const char* defaultValue = (char*)luaL_checkstring(L, 3);
+    jstring jdefaultValue = env->NewStringUTF(defaultValue);
+
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "setStringSharedPreferences", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+    env->CallVoidMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity(), jstorageName, jkey, jdefaultValue);
+
+    env->DeleteLocalRef(jstorageName);
+    env->DeleteLocalRef(jkey);
+    env->DeleteLocalRef(jdefaultValue);
+
+    thread.Detach();
+
+    return 0;
+}
+
+static int GetIntSharedPreferences(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 1);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    const char* storageName = (char*)luaL_checkstring(L, 1);
+    jstring jstorageName = env->NewStringUTF(storageName);
+
+    const char* key = (char*)luaL_checkstring(L, 2);
+    jstring jkey = env->NewStringUTF(key);
+
+    jint jdefaultValue = static_cast<jint>(luaL_checkint(L, 3));
+    
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "getIntSharedPreferences", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;I)I");
+    int value = (int)env->CallIntMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity(), jstorageName, jkey, jdefaultValue);
+    lua_pushinteger(L, value);
+
+    env->DeleteLocalRef(jstorageName);
+    env->DeleteLocalRef(jkey);
+
+    thread.Detach();
+
+    return 1;
+}
+
+static int SetIntSharedPreferences(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    const char* storageName = (char*)luaL_checkstring(L, 1);
+    jstring jstorageName = env->NewStringUTF(storageName);
+
+    const char* key = (char*)luaL_checkstring(L, 2);
+    jstring jkey = env->NewStringUTF(key);
+
+    jint jvalue = static_cast<jint>(luaL_checkint(L, 3));
+
+    AndroidJavaObject instance;
+    GatJavaCoreInstance(env, &instance);
+    jmethodID method = env->GetMethodID(instance.cls, "setIntSharedPreferences", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;I)V");
+    env->CallVoidMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity(), jstorageName, jkey, jvalue);
+
+    env->DeleteLocalRef(jstorageName);
+    env->DeleteLocalRef(jkey);
+    
+    thread.Detach();
+
+    return 0;
+}
+
 #endif
 
 static const luaL_reg Module_methods[] =
@@ -301,6 +424,10 @@ static const luaL_reg Module_methods[] =
     {"copy_to_clipboard", CopyToClipboard},
     {"get_from_clipboard", GetFromClipboard},
     {"get_string_resources", GetStringResources},
+    {"get_string_shared_preferences", GetStringSharedPreferences},
+    {"set_string_shared_preferences", SetStringSharedPreferences},
+    {"get_int_shared_preferences", GetIntSharedPreferences},
+    {"set_int_shared_preferences", SetIntSharedPreferences},
     {0, 0}
 };
 
