@@ -5,10 +5,13 @@ import android.content.Intent
 import com.google.gson.Gson
 import ru.rustore.defold.billing.model.PurchaseProductParams
 import ru.rustore.defold.core.JsonBuilder
+import ru.rustore.defold.core.PlayerProvider
 import ru.rustore.defold.core.RuStoreCore
 import ru.rustore.sdk.billingclient.RuStoreBillingClient
 import ru.rustore.sdk.billingclient.RuStoreBillingClientFactory
 import ru.rustore.sdk.billingclient.provider.logger.ExternalPaymentLogger
+import ru.rustore.sdk.billingclient.utils.resolveForBilling
+import ru.rustore.sdk.core.exception.RuStoreException
 import ru.rustore.sdk.core.feature.model.FeatureAvailabilityResult
 
 object RuStoreBilling : ExternalPaymentLogger {
@@ -49,7 +52,11 @@ object RuStoreBilling : ExternalPaymentLogger {
     }
 
     private fun handleError(throwable: Throwable) {
-        // TO DO
+        PlayerProvider.getCurrentActivity()?.let { activity ->
+            if (allowErrorHandling && throwable is RuStoreException) {
+                throwable.resolveForBilling(activity)
+            }
+        }
     }
 
     @JvmStatic
@@ -101,6 +108,7 @@ object RuStoreBilling : ExternalPaymentLogger {
                     }
                 }
                 .addOnFailureListener { throwable ->
+                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_FAILURE, JsonBuilder.toJson(throwable))
                 }
         }
@@ -114,6 +122,7 @@ object RuStoreBilling : ExternalPaymentLogger {
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PRODUCTS_SUCCESS, gson.toJson(result))
                 }
                 .addOnFailureListener { throwable ->
+                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PRODUCTS_FAILURE, JsonBuilder.toJson(throwable))
                 }
             }
