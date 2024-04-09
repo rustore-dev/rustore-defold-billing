@@ -2,11 +2,14 @@ package ru.rustore.defold.billing
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import ru.rustore.defold.billing.model.PurchaseProductParams
 import ru.rustore.defold.core.JsonBuilder
 import ru.rustore.defold.core.PlayerProvider
 import ru.rustore.defold.core.RuStoreCore
+import ru.rustore.defold.core.UriTypeAdapter
 import ru.rustore.sdk.billingclient.RuStoreBillingClient
 import ru.rustore.sdk.billingclient.RuStoreBillingClientFactory
 import ru.rustore.sdk.billingclient.provider.logger.ExternalPaymentLogger
@@ -36,10 +39,13 @@ object RuStoreBilling : ExternalPaymentLogger {
     const val CHANNEL_ON_PAYMENT_LOGGER_WARNING = "rustore_on_payment_logger_warning"
 
     private var client: RuStoreBillingClient? = null
-    private val gson = Gson()
     private var tag = ""
     private var allowErrorHandling: Boolean = false
     private var isInitialized = false
+
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(Uri::class.java, UriTypeAdapter())
+        .create()
 
     @JvmStatic
     fun setErrorHandling(allowErrorHandling: Boolean) {
