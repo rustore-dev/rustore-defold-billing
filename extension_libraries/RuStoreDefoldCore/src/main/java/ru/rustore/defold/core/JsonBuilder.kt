@@ -2,22 +2,20 @@ package ru.rustore.defold.core
 
 import com.google.gson.Gson
 
+data class SimpleError(
+    val simpleName: String?,
+    val detailMessage: String?
+)
+
 object JsonBuilder {
     private val gson: Gson by lazy { Gson() }
 
     fun toJson(throwable: Throwable?): String {
-        var json = gson.toJson(throwable)
+        val error = SimpleError(
+            simpleName = throwable?.let { it::class.java.simpleName },
+            detailMessage = throwable?.message
+        )
 
-        throwable?.let {
-            if (json.isNotEmpty() && json.endsWith("}")) {
-
-                val splitter = if (json.contains(":")) "," else ""
-                val simpleName = """"simpleName":"${throwable::class.java.simpleName}""""
-
-                json = json.dropLast(1).plus(splitter).plus(simpleName).plus("}")
-            }
-        }
-
-        return json
+        return gson.toJson(error)
     }
 }
