@@ -71,18 +71,21 @@
 #### Проверка доступности работы с платежами
 
 Начальный экран приложения не содержит загруженных данных и уведомлений. Тап по кнопке `Availability` выполняет [проверку доступности платежей](https://www.rustore.ru/help/sdk/payments/checkpurchasesavailability).
+
 ![Проверка доступности платежей](images/02_check_purchases_availability.png)
 
 
 #### Получение списка продуктов
 
 Тап по кнопке `Products` выполняет получение и отображение [списка продуктов](https://www.rustore.ru/help/sdk/payments/getproducts).
+
 ![Получение списка продуктов](images/03_update_products_list.png)
 
 
 #### Покупка продукта
 
 Тап по кнопке `Buy` выполняет запуск сценария [покупки продукта](https://www.rustore.ru/help/sdk/payments/purchaseproduct) с отображением шторки выбора метода оплаты.
+
 ![Покупка продукта](images/04_purchase.png)
 
 
