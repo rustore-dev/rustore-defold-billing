@@ -1,7 +1,7 @@
 ## История изменений
 
 ### Release 5.1.1
-Версия SDK billing 5.1.1.
+- Версия SDK billing 5.1.1.
 
 
 ### Release 5.0.1
