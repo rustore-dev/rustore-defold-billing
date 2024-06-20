@@ -7,29 +7,29 @@
 Репозиторий содержит плагины “RuStoreDefoldBilling” и “RuStoreDefoldCore”, а также демонстрационное приложение с примерами использования и настроек. Поддерживаются версии Defold 1.6.2+.
 
 
-### Сборка плагина
-
-1. Откройте в вашей IDE проект Android из папки _“extension_libraries”_.
-
-2. Выполните сборку проекта командой gradle assemble.
-
-При успешном выполнении сборки в папках _“billing_example / extension_rustore_billing / lib / android”_ и _“billing_example / extension_rustore_core / lib / android”_ будут созданы файлы:
-- RuStoreDefoldBilling.jar
-- RuStoreDefoldCore.jar
-
-
-### Установка плагина в свой проект
-
-1. Выполните шаги раздела “Сборка плагина”.
-
-2. Скопируйте папки _“billing_example / extension_rustore_billing”_ и _“billing_example / extension_rustore_core”_ в корень вашего проекта.
-
-
 ### Сборка примера приложения
 
 Вы можете ознакомиться с демонстрационным приложением содержащим представление работы всех методов sdk:
 - [README](billing_example/README.md)
 - [billing_example](https://gitflic.ru/project/rustore/rustore-defold-billing/file?file=billing_example)
+
+
+### Установка плагина в свой проект
+
+1. Скопируйте папки _“billing_example / extension_rustore_billing”_ и _“billing_example / extension_rustore_core”_ в корень вашего проекта.
+
+
+### Пересборка плагина
+
+Если вам необходимо изменить код библиотек плагинов, вы можете внести изменения и пересобрать подключаемые .jar файлы.
+
+1. Откройте в вашей IDE проект Android из папки _“extension_libraries”_.
+
+2. Выполните сборку проекта командой gradle assemble.
+
+При успешном выполнении сборки в папках _“billing_example / extension_rustore_billing / lib / android”_ и _“billing_example / extension_rustore_core / lib / android”_ будут обновлены файлы:
+- RuStoreDefoldBilling.jar
+- RuStoreDefoldCore.jar
 
 
 ### История изменений
