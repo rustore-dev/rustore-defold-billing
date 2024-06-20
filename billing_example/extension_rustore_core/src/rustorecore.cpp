@@ -82,7 +82,7 @@ static int ShowToast(lua_State* L)
     env->CallVoidMethod(instance.obj, method, dmGraphics::GetNativeAndroidActivity(), jmsg);
 
     env->DeleteLocalRef(jmsg);
-    
+
     thread.Detach();
 
     return 0;
@@ -367,7 +367,7 @@ static int GetIntSharedPreferences(lua_State* L)
     jstring jkey = env->NewStringUTF(key);
 
     jint jdefaultValue = static_cast<jint>(luaL_checkint(L, 3));
-    
+
     AndroidJavaObject instance;
     GatJavaCoreInstance(env, &instance);
     jmethodID method = env->GetMethodID(instance.cls, "getIntSharedPreferences", "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;I)I");
