@@ -34,15 +34,13 @@
 
 ### Настройка примера приложения
 
-1. Выполните шаги раздела [“Сборка плагина”](../README.md). Собранные файлы (.jar) будут автоматически скопированы в проект-пример.
+1. Откройте проект _“game.project”_ в папке _“billing_example”_.
 
-2. Откройте проект _“game.project”_ в папке _“billing_example”_.
+2. В файле _“game.project”_ в разделе "Android" укажите значение `applicationId` в поле "Package".
 
-3. В файле _“game.project”_ в разделе "Android" укажите значение `applicationId` в поле "Package".
+3. В меню "Bundle Application" (Project → Bundle → Android Application...) выполните установку значений полей "Keystore", "Keystore Password", "Key Password", указав расположение и параметры ранее подготовленного файла `*.keystore`.
 
-4. В меню "Bundle Application" (Project → Bundle → Android Application...) выполните установку значений полей "Keystore", "Keystore Password", "Key Password", указав расположение и параметры ранее подготовленного файла `*.keystore`.
-
-5. Выполните сборку проекта командой “Create Bundle...” (Project → Bundle → Android Application... → Create Bundle...) и проверьте работу приложения.
+4. Выполните сборку проекта командой “Create Bundle...” (Project → Bundle → Android Application... → Create Bundle...) и проверьте работу приложения.
 
 
 ### Настройка примера приложения
