@@ -268,6 +268,13 @@ static const luaL_reg Module_methods[] =
     {0, 0}
 };
 
+#else
+
+static const luaL_reg Module_methods[] =
+{
+    {0, 0}
+};
+
 #endif
 
 static void LuaInit(lua_State* L)
