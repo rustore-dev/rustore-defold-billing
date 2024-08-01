@@ -1,6 +1,6 @@
 ext {
     rustore_core_version = '1.0.0'
-    rustore_billingclient_version = '5.1.1'
+    rustore_billingclient_version = '6.0.0'
     rustore_sdk_type = ''
     sdk_version_code = 1
     rustore_example_folder = "${rootProject.projectDir}/../billing_example"
