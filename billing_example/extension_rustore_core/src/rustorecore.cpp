@@ -410,8 +410,6 @@ static int SetIntSharedPreferences(lua_State* L)
     return 0;
 }
 
-#endif
-
 static const luaL_reg Module_methods[] =
 {
     {"connect", Connect},
@@ -430,6 +428,15 @@ static const luaL_reg Module_methods[] =
     {"set_int_shared_preferences", SetIntSharedPreferences},
     {0, 0}
 };
+
+#else
+
+static const luaL_reg Module_methods[] =
+{
+    {0, 0}
+};
+
+#endif
 
 static void LuaInit(lua_State* L)
 {

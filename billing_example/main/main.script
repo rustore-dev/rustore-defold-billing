@@ -252,8 +252,10 @@ function _on_purchase_product_success(self, channel, value)
 	-- -- orderId - string
 	-- -- productId - string
 	-- -- subscriptionToken - string
+	-- -- sandbox - boolean
 	-- data - json (for Cancelled type)
 	-- -- purchaseId - string
+	-- -- sandbox - boolean
 
 	rustorecore.log_warning(LOG_TAG, value)
 	
@@ -263,6 +265,7 @@ end
 function _on_purchase_product_failure(self, channel, value)
 	-- json fields:
 	-- productId - string
+	-- sandbox - boolean
 	-- cause - json
 	-- -- simpleName - string
 	-- -- detailMessage - string
@@ -282,7 +285,6 @@ function _on_get_purchases_success(self, channel, value)
 	-- -- amount - number
 	-- -- amountLabel - string
 	-- -- currency - string
-	-- -- description - string
 	-- -- developerPayload - string
 	-- -- invoiceId - string
 	-- -- language - string
