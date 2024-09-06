@@ -10,7 +10,9 @@
     <uses-feature android:required="true" android:glEsVersion="0x00020000" />
     <uses-sdk android:minSdkVersion="{{android.minimum_sdk_version}}" android:targetSdkVersion="{{android.target_sdk_version}}" />
     <application
+        {{#has-icons?}}
         android:icon="@drawable/icon"
+        {{/has-icons?}}
         android:label="{{project.title}}" android:hasCode="true"
         android:name="android.support.multidex.MultiDexApplication"
         android:enableOnBackInvokedCallback="true"
@@ -25,7 +27,7 @@
                 android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
                 android:screenOrientation="{{orientation-support}}"
                 android:exported="true"
-                android:launchMode="singleTask">
+                android:launchMode="singleInstance">
             <meta-data android:name="android.app.lib_name"
                     android:value="{{exe-name}}" />
             <intent-filter>
@@ -33,9 +35,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!-- RUSTORE BILLING INTENT FILTER -->
-        <activity android:name="ru.rustore.defold.billing.RuStoreIntentFilterActivity" android:exported="true" android:launchMode="singleTask">
+        <activity android:name="ru.rustore.defold.billing.RuStoreIntentFilterActivity"
+                android:exported="true"
+                android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
