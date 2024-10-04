@@ -38,7 +38,7 @@ app_icon_192x192 = /assets/app_icons/icon_192.png
 input_method = HiddenInputField
 package = rustore.sdk.unreal.sample
 minimum_sdk_version = 24
-manifest = /builtins/manifests/android/AndroidManifest.xml
+manifest = /extension_rustore_billing/manifests/android/ExtendedAndroidManifest.xml
 
 [script]
 shared_state = 1

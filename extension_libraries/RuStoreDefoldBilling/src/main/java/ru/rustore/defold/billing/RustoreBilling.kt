@@ -3,7 +3,6 @@ package ru.rustore.defold.billing
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import ru.rustore.defold.billing.model.PurchaseProductParams
 import ru.rustore.defold.core.JsonBuilder
@@ -83,12 +82,6 @@ object RuStoreBilling : ExternalPaymentLogger {
             debugLogs = debugLogs,
             externalPaymentLoggerFactory = if (debugLogs) { tag -> this.tag = tag; this } else null
         )
-
-        if (!isInitialized) {
-            RuStoreIntentFilterActivity.setGameActivityClass(activity.javaClass)
-            val newIntent = Intent(activity, RuStoreIntentFilterActivity::class.java)
-            activity.startActivity(newIntent)
-        }
 
         isInitialized = true
     }
