@@ -1,5 +1,5 @@
 TOP_MENU_RECEIVER = "top_menu#top_menu"
-TOP_MENU_AVAILABILITY = "availability"
+TOP_MENU_AUTHORIZATION = "authorization"
 TOP_MENU_PRODUCTS = "products"
 TOP_MENU_PURCHASES = "purchases"
 
