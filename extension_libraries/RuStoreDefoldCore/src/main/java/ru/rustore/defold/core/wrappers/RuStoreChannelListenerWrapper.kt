@@ -6,6 +6,7 @@ class RuStoreChannelListenerWrapper(cppPointer: Long): IRuStoreChannelListener {
     private val mutex = Any()
     private var cppPointer: Long = 0
     private external fun nativeOnMessage(pointer: Long, channel: String, value: String)
+    private external fun nativeOnMessageTwoParams(pointer: Long, channel: String, value0: String, value1: String)
 
     init {
         this.cppPointer = cppPointer
@@ -15,6 +16,14 @@ class RuStoreChannelListenerWrapper(cppPointer: Long): IRuStoreChannelListener {
         synchronized(mutex) {
             if (cppPointer != 0L) {
                 nativeOnMessage(cppPointer, channel, value)
+            }
+        }
+    }
+
+    override fun onMessage(channel: String, value0: String, value1: String) {
+        synchronized(mutex) {
+            if (cppPointer != 0L) {
+                nativeOnMessageTwoParams(cppPointer, channel, value0, value1)
             }
         }
     }

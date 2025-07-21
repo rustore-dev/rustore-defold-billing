@@ -1,4 +1,4 @@
-package ru.rustore.godot.core
+package ru.rustore.defold.core
 
 import org.junit.Test
 

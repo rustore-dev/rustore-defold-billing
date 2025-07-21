@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import android.widget.Toast
 import ru.rustore.defold.core.callbacks.IRuStoreChannelListener
+import ru.rustore.sdk.core.util.RuStoreUtils
 
 object RuStoreCore {
     private const val CLIP_DATA_TOOLTIP = "Copied Text"
@@ -21,6 +22,12 @@ object RuStoreCore {
     fun emitSignal(channel: String, value: String) {
         listener?.run {
             onMessage(channel, value)
+        }
+    }
+
+    fun emitSignal(channel: String, value0: String, value1: String) {
+        listener?.run {
+            onMessage(channel, value0, value1)
         }
     }
 
@@ -98,4 +105,16 @@ object RuStoreCore {
         editor.putInt(key, value)
         editor.apply()
     }
+
+    fun isRuStoreInstalled(activity: Activity): Boolean =
+        RuStoreUtils.isRuStoreInstalled(activity)
+
+    fun openRuStoreDownloadInstruction(activity: Activity) =
+        RuStoreUtils.openRuStoreDownloadInstruction(activity)
+
+    fun openRuStore(activity: Activity) =
+        RuStoreUtils.openRuStore(activity)
+
+    fun openRuStoreAuthorization(activity: Activity) =
+        RuStoreUtils.openRuStoreAuthorization(activity)
 }

@@ -1,4 +1,4 @@
-package ru.rustore.defold.core
+package ru.rustore.defold.core.internal
 
 import android.net.Uri
 import com.google.gson.TypeAdapter
