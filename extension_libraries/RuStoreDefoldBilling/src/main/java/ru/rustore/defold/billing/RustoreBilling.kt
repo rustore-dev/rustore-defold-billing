@@ -5,20 +5,22 @@ import android.content.Intent
 import android.net.Uri
 import com.google.gson.GsonBuilder
 import ru.rustore.defold.billing.model.PurchaseProductParams
-import ru.rustore.defold.core.JsonBuilder
 import ru.rustore.defold.core.PlayerProvider
 import ru.rustore.defold.core.RuStoreCore
-import ru.rustore.defold.core.UriTypeAdapter
+import ru.rustore.defold.core.internal.JsonBuilder
+import ru.rustore.defold.core.internal.UriTypeAdapter
 import ru.rustore.sdk.billingclient.RuStoreBillingClient
 import ru.rustore.sdk.billingclient.RuStoreBillingClientFactory
+import ru.rustore.sdk.billingclient.model.purchase.PurchaseAvailabilityResult
 import ru.rustore.sdk.billingclient.provider.logger.ExternalPaymentLogger
 import ru.rustore.sdk.billingclient.utils.resolveForBilling
 import ru.rustore.sdk.core.exception.RuStoreException
-import ru.rustore.sdk.core.feature.model.FeatureAvailabilityResult
 
 object RuStoreBilling : ExternalPaymentLogger {
     const val CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS = "rustore_check_purchases_available_success"
     const val CHANNEL_CHECK_PURCHASES_AVAILABLE_FAILURE = "rustore_check_purchases_available_failure"
+    const val CHANNEL_ON_GET_AUTHORIZATION_STATUS_SUCCESS = "rustore_on_get_authorization_status_success"
+    const val CHANNEL_ON_GET_AUTHORIZATION_STATUS_FAILURE = "rustore_on_get_authorization_status_failure"
     const val CHANNEL_ON_GET_PRODUCTS_SUCCESS = "rustore_on_get_products_success"
     const val CHANNEL_ON_GET_PRODUCTS_FAILURE = "rustore_on_get_products_failure"
     const val CHANNEL_ON_PURCHASE_PRODUCT_SUCCESS = "rustore_on_purchase_product_success"
@@ -47,11 +49,13 @@ object RuStoreBilling : ExternalPaymentLogger {
         .create()
 
     @JvmStatic
+    @Deprecated("This method is deprecated. Error handling must be performed on the application side.")
     fun setErrorHandling(allowErrorHandling: Boolean) {
         this.allowErrorHandling = allowErrorHandling
     }
 
     @JvmStatic
+    @Deprecated("This method is deprecated. Error handling must be performed on the application side.")
     fun getErrorHandling() : Boolean {
         return allowErrorHandling
     }
@@ -87,21 +91,27 @@ object RuStoreBilling : ExternalPaymentLogger {
     }
 
     @JvmStatic
+    @Deprecated("This method is deprecated. This method only works for flows with an authorized user in RuStore.")
     fun checkPurchasesAvailability() {
         client?.run {
             purchases.checkPurchasesAvailability()
                 .addOnSuccessListener { result ->
                     when (result) {
-                        is FeatureAvailabilityResult.Available -> {
+                        is PurchaseAvailabilityResult.Available -> {
                             RuStoreCore.emitSignal(
                                 CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS,
                                 """{"isAvailable": true}"""
                             )
                         }
-                        is FeatureAvailabilityResult.Unavailable -> {
+                        is PurchaseAvailabilityResult.Unavailable -> {
                             val cause = JsonBuilder.toJson(result.cause)
                             val json = """{"isAvailable": false, "cause": $cause}"""
                             handleError(result.cause)
+                            RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS, json)
+                        }
+                        else -> {
+                            val cause = """{"simpleName": "Error", "detailMessage": "Unknown response type"}"""
+                            val json = """{"isAvailable": false, "cause": $cause}"""
                             RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS, json)
                         }
                     }
@@ -109,6 +119,22 @@ object RuStoreBilling : ExternalPaymentLogger {
                 .addOnFailureListener { throwable ->
                     handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_FAILURE, JsonBuilder.toJson(throwable))
+                }
+        }
+    }
+
+    @JvmStatic
+    fun getAuthorizationStatus() {
+        client?.run {
+            userInfo.getAuthorizationStatus()
+                .addOnSuccessListener { result ->
+                    RuStoreCore.emitSignal(CHANNEL_ON_GET_AUTHORIZATION_STATUS_SUCCESS, result.authorized.toString())
+                }
+                .addOnFailureListener { throwable ->
+                    RuStoreCore.emitSignal(
+                        CHANNEL_ON_GET_AUTHORIZATION_STATUS_FAILURE,
+                        JsonBuilder.toJson(throwable)
+                    )
                 }
         }
     }
