@@ -1,6 +1,6 @@
 package ru.rustore.defold.billing
 
-import ru.rustore.defold.core.JsonBuilder
+import ru.rustore.defold.core.internal.JsonBuilder
 
 object SignalConverter {
 

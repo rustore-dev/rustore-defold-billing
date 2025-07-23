@@ -39,6 +39,7 @@ static int Init(lua_State* L)
     return 0;
 }
 
+[[deprecated("This method is deprecated. This method only works for flows with an authorized user in RuStore.")]]
 static int CheckPurchasesAvailability(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 0);
@@ -53,6 +54,23 @@ static int CheckPurchasesAvailability(lua_State* L)
 
     thread.Detach();
     
+    return 0;
+}
+
+static int GetAuthorizationStatus(lua_State* L)
+{
+    DM_LUA_STACK_CHECK(L, 0);
+
+    dmAndroid::ThreadAttacher thread;
+    JNIEnv* env = thread.GetEnv();
+
+    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.billing.RuStoreBilling");
+    jmethodID method = env->GetStaticMethodID(cls, "getAuthorizationStatus", "()V");
+
+    env->CallStaticVoidMethod(cls, method);
+
+    thread.Detach();
+
     return 0;
 }
 
@@ -233,6 +251,7 @@ static int SetTheme(lua_State* L)
     return 0;
 }
 
+[[deprecated("This method is deprecated. Error handling must be performed on the application side.")]]
 static int SetErrorHandling(lua_State* L)
 {
     DM_LUA_STACK_CHECK(L, 0);
@@ -257,6 +276,7 @@ static const luaL_reg Module_methods[] =
 {
     {"init", Init},
     {"check_purchases_availability", CheckPurchasesAvailability},
+    {"get_authorization_status", GetAuthorizationStatus},
     {"get_products", GetProducts},
     {"purchase_product", PurchaseProduct},
     {"get_purchases", GetPurchases},
@@ -287,55 +307,55 @@ static void LuaInit(lua_State* L)
     assert(top == lua_gettop(L));
 }
 
-static dmExtension::Result AppInitializeMyExtension(dmExtension::AppParams* params)
+static dmExtension::Result AppInitializeBillingExtension(dmExtension::AppParams* params)
 {
-    dmLogInfo("AppInitializeMyExtension");
+    dmLogInfo("AppInitializeBillingExtension");
     return dmExtension::RESULT_OK;
 }
 
-static dmExtension::Result InitializeMyExtension(dmExtension::Params* params)
+static dmExtension::Result InitializeBillingExtension(dmExtension::Params* params)
 {
     LuaInit(params->m_L);
     dmLogInfo("Registered %s Extension", MODULE_NAME);
     return dmExtension::RESULT_OK;
 }
 
-static dmExtension::Result AppFinalizeMyExtension(dmExtension::AppParams* params)
+static dmExtension::Result AppFinalizeBillingExtension(dmExtension::AppParams* params)
 {
-    dmLogInfo("AppFinalizeMyExtension");
+    dmLogInfo("AppFinalizeBillingExtension");
     return dmExtension::RESULT_OK;
 }
 
-static dmExtension::Result FinalizeMyExtension(dmExtension::Params* params)
+static dmExtension::Result FinalizeBillingExtension(dmExtension::Params* params)
 {
-    dmLogInfo("FinalizeMyExtension");
+    dmLogInfo("FinalizeBillingExtension");
     return dmExtension::RESULT_OK;
 }
 
-static dmExtension::Result OnUpdateMyExtension(dmExtension::Params* params)
+static dmExtension::Result OnUpdateBillingExtension(dmExtension::Params* params)
 {
-    dmLogInfo("OnUpdateMyExtension");
+    dmLogInfo("OnUpdateBillingExtension");
     return dmExtension::RESULT_OK;
 }
 
-static void OnEventMyExtension(dmExtension::Params* params, const dmExtension::Event* event)
+static void OnEventBillingExtension(dmExtension::Params* params, const dmExtension::Event* event)
 {
     switch(event->m_Event)
     {
         case dmExtension::EVENT_ID_ACTIVATEAPP:
-        dmLogInfo("OnEventMyExtension - EVENT_ID_ACTIVATEAPP");
+        dmLogInfo("OnEventBillingExtension - EVENT_ID_ACTIVATEAPP");
         break;
         case dmExtension::EVENT_ID_DEACTIVATEAPP:
-        dmLogInfo("OnEventMyExtension - EVENT_ID_DEACTIVATEAPP");
+        dmLogInfo("OnEventBillingExtension - EVENT_ID_DEACTIVATEAPP");
         break;
         case dmExtension::EVENT_ID_ICONIFYAPP:
-        dmLogInfo("OnEventMyExtension - EVENT_ID_ICONIFYAPP");
+        dmLogInfo("OnEventBillingExtension - EVENT_ID_ICONIFYAPP");
         break;
         case dmExtension::EVENT_ID_DEICONIFYAPP:
-        dmLogInfo("OnEventMyExtension - EVENT_ID_DEICONIFYAPP");
+        dmLogInfo("OnEventBillingExtension - EVENT_ID_DEICONIFYAPP");
         break;
         default:
-        dmLogWarning("OnEventMyExtension - Unknown event id");
+        dmLogWarning("OnEventBillingExtension - Unknown event id");
         break;
     }
 }
@@ -346,4 +366,4 @@ static void OnEventMyExtension(dmExtension::Params* params, const dmExtension::E
 
 // MyExtension is the C++ symbol that holds all relevant extension data.
 // It must match the name field in the `ext.manifest`
-DM_DECLARE_EXTENSION(EXTENSION_NAME, LIB_NAME, AppInitializeMyExtension, AppFinalizeMyExtension, InitializeMyExtension, OnUpdateMyExtension, OnEventMyExtension, FinalizeMyExtension)
+DM_DECLARE_EXTENSION(EXTENSION_NAME, LIB_NAME, AppInitializeBillingExtension, AppFinalizeBillingExtension, InitializeBillingExtension, OnUpdateBillingExtension, OnEventBillingExtension, FinalizeBillingExtension)

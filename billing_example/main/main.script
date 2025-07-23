@@ -3,12 +3,13 @@ require("main.gui.slider_consts")
 require("main.gui.product_actions_consts")
 require("main.gui.purchase_actions_consts")
 
+
 local THIS_RECEIVER = "background#main"
-local LOG_TAG = "ssss"
+local LOG_TAG = "rustore_tag"
 local DEEPLINK_SCHEME = "example"
 local APPLICATION_ID = "184062"
 local DEBUG_LOGS = true
-local PRODUCT_IDS = { "ue_non_con2", "ue_non_con1", "ue_con2", "ue_con1", "ue_sub2", "ue_sub1" }
+local PRODUCT_IDS = { "000", "100" }
 
 local _data_collection = {}
 local _slider_collection = {}
@@ -43,6 +44,8 @@ function init(self)
 
 	rustorecore.connect("rustore_check_purchases_available_success", _check_purchases_available_success)
 	rustorecore.connect("rustore_check_purchases_available_failure", _check_purchases_available_failure)
+	rustorecore.connect("rustore_on_get_authorization_status_success", _get_authorization_status_success)
+	rustorecore.connect("rustore_on_get_authorization_status_failure", _get_authorization_status_failure)
 	rustorecore.connect("rustore_on_get_products_success", _on_get_products_success)
 	rustorecore.connect("rustore_on_get_products_failure", _on_get_products_failure)
 	rustorecore.connect("rustore_on_purchase_product_success", _on_purchase_product_success)
@@ -83,8 +86,8 @@ end
 
 function on_message(self, message_id, message, sender)
 	if message_id == hash(TOP_MENU_BUTTON_PRESSED) then
-		if message.button == TOP_MENU_AVAILABILITY then
-			rustorebilling.check_purchases_availability()
+		if message.button == TOP_MENU_AUTHORIZATION then
+			rustorebilling.get_authorization_status()
 			rustorecore.show_toast("Begin check")
 		end
 
@@ -175,6 +178,28 @@ function _check_purchases_available_failure(self, channel, value)
 	
 	rustorecore.log_warning(LOG_TAG, value)
 	
+	local data = json.decode(value)
+	rustorecore.show_toast(data.cause.detailMessage)
+end
+
+-- 
+-- Get authorization status
+-- 
+function _get_authorization_status_success(self, channel, value)
+	-- value -- boolean
+	rustorecore.log_warning(LOG_TAG, value)
+
+	local message = "Authorized: "..tostring(value)
+	rustorecore.show_toast(message)
+end
+
+function _get_authorization_status_failure(self, channel, value)
+	-- json fields:
+	-- simpleName - string
+	-- detailMessage - string
+
+	rustorecore.log_warning(LOG_TAG, value)
+
 	local data = json.decode(value)
 	rustorecore.show_toast(data.cause.detailMessage)
 end

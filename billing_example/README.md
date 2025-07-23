@@ -55,21 +55,16 @@
 
 #### Проверка доступности работы с платежами
 
-Начальный экран приложения не содержит загруженных данных и уведомлений. Тап по кнопке `Availability` выполняет [проверку доступности платежей][20].
-
-![Проверка доступности платежей](images/02_check_purchases_availability.png)
-
-
 #### Получение списка продуктов
 
-Тап по кнопке `Products` выполняет получение и отображение [списка продуктов][30].
+Тап по кнопке `Products` выполняет получение и отображение [списка продуктов][20].
 
 ![Получение списка продуктов](images/03_update_products_list.png)
 
 
 #### Покупка продукта
 
-Тап по кнопке `Buy` выполняет запуск сценария [покупки продукта][40] с отображением шторки выбора метода оплаты.
+Тап по кнопке `Buy` выполняет запуск сценария [покупки продукта][30] с отображением шторки выбора метода оплаты.
 
 ![Покупка продукта](images/04_purchase.png)
 
@@ -83,7 +78,6 @@
 
 Дополнительная помощь и инструкции доступны на странице [rustore.ru/help/](https://www.rustore.ru/help/) и по электронной почте [support@rustore.ru](mailto:support@rustore.ru).
 
-[10]: https://www.rustore.ru/help/sdk/payments/defold/6-1-0
-[20]: https://www.rustore.ru/help/sdk/payments/defold/6-1-0#checkpurchasesavailability
-[30]: https://www.rustore.ru/help/sdk/payments/defold/6-1-0#%D0%BF%D0%BE%D0%BB%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D1%81%D0%BF%D0%B8%D1%81%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%82%D0%BE%D0%B2
-[40]: https://www.rustore.ru/help/sdk/payments/defold/6-1-0#%D0%BF%D0%BE%D0%BA%D1%83%D0%BF%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%82%D0%B0
+[10]: https://www.rustore.ru/help/sdk/payments/defold/9-1-0
+[20]: https://www.rustore.ru/help/sdk/payments/defold/9-1-0#%D0%BF%D0%BE%D0%BB%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5-%D1%81%D0%BF%D0%B8%D1%81%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%82%D0%BE%D0%B2
+[30]: https://www.rustore.ru/help/sdk/payments/defold/9-1-0#%D0%BF%D0%BE%D0%BA%D1%83%D0%BF%D0%BA%D0%B0-%D0%BF%D1%80%D0%BE%D0%B4%D1%83%D0%BA%D1%82%D0%B0

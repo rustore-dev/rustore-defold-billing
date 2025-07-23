@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 24
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode sdk_version_code
         versionName "${rustore_billingclient_version}"
 
@@ -37,7 +37,7 @@ android {
 }
 
 ext {
-    sdk_lib_dependence = "ru.rustore.sdk:billingclient:$rustore_billingclient_version$rustore_sdk_type"
+    sdk_lib_dependence = "ru.rustore.sdk:billingclient:$rustore_billingclient_version"
 }
 
 dependencies {

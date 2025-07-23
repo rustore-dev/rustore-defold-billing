@@ -1,5 +1,12 @@
 ## История изменений
 
+### Release 9.1.0
+- Версия SDK billing 9.1.0.
+- Добавлен метод проверки авторизации пользователя в RuStore — `get_authorization_status`.
+- Метод `check_purchases_availability` помечен как устаревший.
+- Метод `set_error_handling` помечен как устаревший.
+
+
 ### Release 6.1.0
 - Версия SDK billing 6.1.0.
 

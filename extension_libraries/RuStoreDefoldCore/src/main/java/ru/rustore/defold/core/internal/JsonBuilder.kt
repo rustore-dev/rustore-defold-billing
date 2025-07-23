@@ -1,11 +1,7 @@
-package ru.rustore.defold.core
+package ru.rustore.defold.core.internal
 
 import com.google.gson.Gson
-
-data class SimpleError(
-    val simpleName: String?,
-    val detailMessage: String?
-)
+import ru.rustore.defold.core.model.SimpleError
 
 object JsonBuilder {
     private val gson: Gson by lazy { Gson() }

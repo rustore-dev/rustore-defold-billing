@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     buildToolsVersion "30.0.3"
 
     defaultConfig {
         minSdkVersion 24
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode sdk_version_code
         versionName "${rustore_core_version}"
 
@@ -40,6 +40,7 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.fragment:fragment:1.3.0"
+    implementation "ru.rustore.sdk:core:$rustore_core_version"
     implementation "com.google.code.gson:gson:2.10.1"
     compileOnly fileTree(dir: '../libs', include: ['*.aar', '*.jar'], exclude: [])
     testImplementation 'junit:junit:4.+'
@@ -48,7 +49,7 @@ dependencies {
 }
 
 task createJar(type: Copy) {
-    def aarFile = file( [buildDir.absolutePath, 'outputs', 'aar', "${project.name}-release.aar"].join(File.separator) )
+    def aarFile = file( [buildDir.absolutePath, 'outputs', 'aar', "${project.name}-${rustore_sdk_build_variant}.aar"].join(File.separator) )
     def outputDir = file( ["$rustore_example_folder", 'extension_rustore_core', 'lib', 'android'].join(File.separator) )
 
     from zipTree(aarFile)
