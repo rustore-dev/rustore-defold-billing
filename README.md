@@ -18,6 +18,7 @@
 
 1. Скопируйте папки _“billing_example / extension_rustore_billing”_ и _“billing_example / extension_rustore_core”_ в корень вашего проекта.
 
+2. В “game.project” в разделе “Android” в поле “Manifest” укажите путь к файлу “ExtendedAndroidManifest.xml” в папке _“extension_rustore_billing / manifests / android”_
 
 ### Пересборка плагина
 
