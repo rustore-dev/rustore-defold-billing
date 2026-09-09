@@ -4,14 +4,16 @@ plugins {
 }
 
 android {
-    compileSdkVersion 34
-    buildToolsVersion "30.0.3"
+    namespace = "ru.rustore.defold.billing"
+
+    compileSdkVersion = 34
+    buildToolsVersion = "35.0.1"
 
     defaultConfig {
-        minSdkVersion 24
-        targetSdkVersion 34
-        versionCode sdk_version_code
-        versionName "${rustore_billingclient_version}"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = sdk_version_code
+        versionName = "${rustore_billingclient_version}"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -41,7 +43,6 @@ ext {
 }
 
 dependencies {
-
     implementation "$sdk_lib_dependence"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "com.google.code.gson:gson:2.10.1"
@@ -53,15 +54,19 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
 
-task createJar(type: Copy) {
-    def aarFile = file( [buildDir.absolutePath, 'outputs', 'aar', "${project.name}-${rustore_sdk_build_variant}.aar"].join(File.separator) )
+def createJar = tasks.register('createJar', Copy) {
+    def outputAarDir = layout.buildDirectory.dir("outputs/aar")
+
+    def aarFile = outputAarDir.get().file("${project.name}-${rustore_sdk_build_variant}.aar").asFile
     def outputDir = file( ["$rustore_example_folder", 'extension_rustore_billing', 'lib', 'android'].join(File.separator) )
+
+    def outputJar = "${project.name}.jar"
 
     from zipTree(aarFile)
     include '**/*.jar'
     into outputDir
     rename { fileName ->
-        fileName.replace("classes.jar", "${project.name}.jar")
+        fileName.replace("classes.jar", outputJar)
     }
 }
 
