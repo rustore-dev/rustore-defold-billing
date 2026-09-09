@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import com.google.gson.GsonBuilder
 import ru.rustore.defold.billing.model.PurchaseProductParams
-import ru.rustore.defold.core.PlayerProvider
 import ru.rustore.defold.core.RuStoreCore
 import ru.rustore.defold.core.internal.JsonBuilder
 import ru.rustore.defold.core.internal.UriTypeAdapter
@@ -13,8 +12,6 @@ import ru.rustore.sdk.billingclient.RuStoreBillingClient
 import ru.rustore.sdk.billingclient.RuStoreBillingClientFactory
 import ru.rustore.sdk.billingclient.model.purchase.PurchaseAvailabilityResult
 import ru.rustore.sdk.billingclient.provider.logger.ExternalPaymentLogger
-import ru.rustore.sdk.billingclient.utils.resolveForBilling
-import ru.rustore.sdk.core.exception.RuStoreException
 
 object RuStoreBilling : ExternalPaymentLogger {
     const val CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS = "rustore_check_purchases_available_success"
@@ -41,32 +38,11 @@ object RuStoreBilling : ExternalPaymentLogger {
 
     private var client: RuStoreBillingClient? = null
     private var tag = ""
-    private var allowErrorHandling: Boolean = false
     private var isInitialized = false
 
     private val gson = GsonBuilder()
         .registerTypeAdapter(Uri::class.java, UriTypeAdapter())
         .create()
-
-    @JvmStatic
-    @Deprecated("This method is deprecated. Error handling must be performed on the application side.")
-    fun setErrorHandling(allowErrorHandling: Boolean) {
-        this.allowErrorHandling = allowErrorHandling
-    }
-
-    @JvmStatic
-    @Deprecated("This method is deprecated. Error handling must be performed on the application side.")
-    fun getErrorHandling() : Boolean {
-        return allowErrorHandling
-    }
-
-    private fun handleError(throwable: Throwable) {
-        PlayerProvider.getCurrentActivity()?.let { activity ->
-            if (allowErrorHandling && throwable is RuStoreException) {
-                throwable.resolveForBilling(activity)
-            }
-        }
-    }
 
     @JvmStatic
     fun getBillingClient(): RuStoreBillingClient? {
@@ -106,7 +82,6 @@ object RuStoreBilling : ExternalPaymentLogger {
                         is PurchaseAvailabilityResult.Unavailable -> {
                             val cause = JsonBuilder.toJson(result.cause)
                             val json = """{"isAvailable": false, "cause": $cause}"""
-                            handleError(result.cause)
                             RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_SUCCESS, json)
                         }
                         else -> {
@@ -117,7 +92,6 @@ object RuStoreBilling : ExternalPaymentLogger {
                     }
                 }
                 .addOnFailureListener { throwable ->
-                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_CHECK_PURCHASES_AVAILABLE_FAILURE, JsonBuilder.toJson(throwable))
                 }
         }
@@ -147,7 +121,6 @@ object RuStoreBilling : ExternalPaymentLogger {
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PRODUCTS_SUCCESS, gson.toJson(result))
                 }
                 .addOnFailureListener { throwable ->
-                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PRODUCTS_FAILURE, JsonBuilder.toJson(throwable))
                 }
             }
@@ -171,7 +144,6 @@ object RuStoreBilling : ExternalPaymentLogger {
                 .addOnFailureListener { throwable ->
                     val cause = JsonBuilder.toJson(throwable)
                     val json = """{"productId": "$productId", "cause": $cause}"""
-                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_ON_PURCHASE_PRODUCT_FAILURE, json)
                 }
         }
@@ -185,7 +157,6 @@ object RuStoreBilling : ExternalPaymentLogger {
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PURCHASES_SUCCESS, gson.toJson(result))
                 }
                 .addOnFailureListener { throwable ->
-                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PURCHASES_FAILURE, JsonBuilder.toJson(throwable))
                 }
         }
@@ -206,7 +177,6 @@ object RuStoreBilling : ExternalPaymentLogger {
                 .addOnFailureListener { throwable ->
                     val cause = JsonBuilder.toJson(throwable)
                     val json = """{"purchaseId": "$purchaseId", "cause": $cause}"""
-                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_ON_CONFIRM_PURCHASE_FAILURE, json)
                 }
         }
@@ -227,7 +197,6 @@ object RuStoreBilling : ExternalPaymentLogger {
                 .addOnFailureListener { throwable ->
                     val cause = JsonBuilder.toJson(throwable)
                     val json = """{"purchaseId": "$purchaseId", "cause": $cause}"""
-                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_ON_DELETE_PURCHASE_FAILURE, json)
                 }
         }
@@ -243,7 +212,6 @@ object RuStoreBilling : ExternalPaymentLogger {
                 .addOnFailureListener { throwable ->
                     val cause = JsonBuilder.toJson(throwable)
                     val json = """{"purchaseId": "$purchaseId", "cause": $cause}"""
-                    handleError(throwable)
                     RuStoreCore.emitSignal(CHANNEL_ON_GET_PURCHASE_INFO_FAILURE, json)
                 }
         }

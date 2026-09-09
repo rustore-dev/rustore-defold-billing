@@ -2,9 +2,11 @@
 #define LIB_NAME "RuStoreBilling"
 #define MODULE_NAME "rustorebilling"
 
+#include <dmsdk/sdk.h>
+#include "billing_enums.h"
+
 #if defined(DM_PLATFORM_ANDROID)
 
-#include <dmsdk/sdk.h>
 #include <dmsdk/dlib/android.h>
 #include <string>
 #include <vector>
@@ -251,26 +253,6 @@ static int SetTheme(lua_State* L)
     return 0;
 }
 
-[[deprecated("This method is deprecated. Error handling must be performed on the application side.")]]
-static int SetErrorHandling(lua_State* L)
-{
-    DM_LUA_STACK_CHECK(L, 0);
-
-    dmAndroid::ThreadAttacher thread;
-    JNIEnv* env = thread.GetEnv();
-
-    jclass cls = dmAndroid::LoadClass(env, "ru.rustore.defold.billing.RuStoreBilling");
-    jmethodID method = env->GetStaticMethodID(cls, "setErrorHandling", "(Z)V");
-
-    jboolean jvalue = (jboolean)lua_toboolean(L, 1);
-
-    env->CallStaticVoidMethod(cls, method, jvalue);
-
-    thread.Detach();
-
-    return 0;
-}
-
 // Functions exposed to Lua
 static const luaL_reg Module_methods[] =
 {
@@ -284,7 +266,6 @@ static const luaL_reg Module_methods[] =
     {"delete_purchase", DeletePurchase},
     {"get_purchase_info", GetPurchaseInfo},
     {"set_theme", SetTheme},
-    {"set_error_handling", SetErrorHandling},
     {0, 0}
 };
 
@@ -316,6 +297,8 @@ static dmExtension::Result AppInitializeBillingExtension(dmExtension::AppParams*
 static dmExtension::Result InitializeBillingExtension(dmExtension::Params* params)
 {
     LuaInit(params->m_L);
+    RegisterGlobalRuStoreBillingEnums(params->m_L);
+    
     dmLogInfo("Registered %s Extension", MODULE_NAME);
     return dmExtension::RESULT_OK;
 }
